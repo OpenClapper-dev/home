@@ -43,8 +43,8 @@ dialog.f-modal[open] { opacity: 1; transform: none; }
 /* Closed: core's .f-modal is display: flex, which would keep an invisible box over the page that eats clicks. */
 dialog.f-modal:not([open]) { display: none; }
 @starting-style { dialog.f-modal[open] { opacity: 0; transform: translateY(8px) scale(0.98); } }
-dialog.f-modal::backdrop { background: var(--scrim); opacity: 0; transition: opacity var(--dur) var(--ease), overlay var(--dur) allow-discrete, display var(--dur) allow-discrete; }
-dialog.f-modal[open]::backdrop { opacity: var(--scrim-alpha); }
+dialog.f-modal::backdrop { background: rgb(from var(--scrim) r g b / var(--scrim-alpha)); opacity: 0; transition: opacity var(--dur) var(--ease), overlay var(--dur) allow-discrete, display var(--dur) allow-discrete; }
+dialog.f-modal[open]::backdrop { opacity: 1; }
 @starting-style { dialog.f-modal[open]::backdrop { opacity: 0; } }
 html { scrollbar-gutter: stable; }
 html:has(dialog.f-modal[open]) { overflow: hidden; }
