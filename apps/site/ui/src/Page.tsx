@@ -3,7 +3,7 @@
  * the hosted version and why it is closed, then the two forms. The sections in the owner's voice are
  * marked (.voice); the rest speaks for the product.
  */
-import { IconButton, LinkButton, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
+import { Button, IconButton, LinkButton, Modal, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
 import { Requests } from "./Requests.tsx";
 import { Waitlist } from "./Waitlist.tsx";
@@ -23,6 +23,7 @@ function useConfirmed(): "yes" | "no" | null {
 export function Page() {
   const [theme, setTheme] = useTheme();
   const confirmed = useConfirmed();
+  const [why, setWhy] = useState(false);
   return (
     <main class="page">
       <header class="top">
@@ -71,22 +72,22 @@ export function Page() {
       <section class="sec" id="apps">
         <h2>The ecosystem</h2>
         <p class="sec__sub">Three apps, one system.</p>
-        <p class="prose">Features are deliberately not listed here: the project is in alpha, many of them are shaped by one cinematographer's workflow, and they will change and merge as more people use it. What stays is the division of labour.</p>
+        <p class="prose">Features are deliberately not listed here: the project is in alpha, many of them are shaped by one cinematographer’s workflow, and they will change and merge as more people use it. A detailed list of supported workflows comes once OpenClapper leaves alpha.</p>
         <div class="apps">
           <article class="card">
-            <img class="card__icon" src="/icons/studio.svg" alt="" width="48" height="48" />
+            <img class="card__icon" src="/icons/studio.svg" alt="" width="64" height="64" />
             <span class="card__tag">Web</span>
             <h3>Studio</h3>
-            <p>The primary application, where the work is done: reviewing and organising what was scouted, and planning the shooting days from it.</p>
+            <p>The main web application, where the work is done: organising and planning a production.</p>
           </article>
           <article class="card">
-            <img class="card__icon" src="/icons/phone.svg" alt="" width="48" height="48" />
+            <img class="card__icon" src="/icons/phone.svg" alt="" width="64" height="64" />
             <span class="card__tag">Phone</span>
             <h3>Mobile</h3>
-            <p>A versatile companion on set and on location, closely integrated with the Studio: capture on the phone, and the Studio sees it.</p>
+            <p>A lightweight companion that helps you stay on track, closely integrated with the Studio.</p>
           </article>
           <article class="card">
-            <img class="card__icon" src="/icons/admin.svg" alt="" width="48" height="48" />
+            <img class="card__icon" src="/icons/admin.svg" alt="" width="64" height="64" />
             <span class="card__tag">Self-hosting</span>
             <h3>Admin</h3>
             <p>The operator's side of an instance: user management and resource management for whoever runs OpenClapper for a school, a company or a crew.</p>
@@ -96,29 +97,36 @@ export function Page() {
 
       <section class="sec" id="support">
         <h2>State of support</h2>
-        <p class="sec__sub">What works today, and what is planned.</p>
-        <div class="support__wrap">
-          <table class="support">
-            <thead><tr><th scope="col">Area</th><th scope="col">Today</th><th scope="col">Planned</th></tr></thead>
-            <tbody>
-              <tr>
-                <td data-label="Area">Studio and Admin</td>
-                <td data-label="Today"><span class="pill pill--ok">Chrome and Chromium browsers</span> Strongly recommended. Other browsers may work; there has not been time to test every one.</td>
-                <td data-label="Planned">Testing across browsers once the apps settle.</td>
-              </tr>
-              <tr>
-                <td data-label="Area">Mobile</td>
-                <td data-label="Today"><span class="pill pill--ok">Android</span></td>
-                <td data-label="Planned"><span class="pill pill--soon">iOS</span> Planned soon. The ecosystem is meant to stay cross-platform.</td>
-              </tr>
-              <tr>
-                <td data-label="Area">Self-hosting</td>
-                <td data-label="Today"><span class="pill pill--ok">Cloudflare + GitHub</span> The deployment is tied to both today, and they will stay the recommended path.</td>
-                <td data-label="Planned"><span class="pill pill--later">Your own infrastructure</span> A provider-independent layer underneath, or the Cloudflare stack on external hardware. Not the focus right now; it moves up when enough people ask for it.</td>
-              </tr>
-            </tbody>
-          </table>
+        <p class="sec__sub">What runs where today.</p>
+        <div class="apps">
+          <article class="card">
+            <span class="card__tag">Studio and Admin</span>
+            <h3>Chrome and Chromium browsers</h3>
+            <p>Strongly recommended. Other browsers may work, but they are untested.</p>
+          </article>
+          <article class="card">
+            <span class="card__tag">Mobile</span>
+            <h3>Android</h3>
+            <p>An iOS app is planned. The ecosystem is meant to stay cross-platform.</p>
+            <span class="pill pill--soon">iOS planned</span>
+          </article>
+          <article class="card">
+            <span class="card__tag">Self-hosting</span>
+            <h3>Cloudflare and GitHub</h3>
+            <p>A deployment runs on a Cloudflare account and is managed from a GitHub repository.</p>
+            <div><Button kind="secondary" size="sm" onClick={() => setWhy(true)}>Why these services?</Button></div>
+          </article>
         </div>
+        <Modal open={why} onClose={() => setWhy(false)} title="Why Cloudflare and GitHub?">
+          <p>Self-hosting should cost a small company, a film school or an independent crew nothing to start, and as little as possible to run. Both services make that true today.</p>
+          <h3>GitHub</h3>
+          <p>A very generous free tier for managing a deployment: a self-hoster does not pay for it. And it is the de-facto standard of the open-source community, where OpenClapper lives anyway.</p>
+          <h3>Cloudflare</h3>
+          <p>The most comprehensive set of cloud services for what OpenClapper needs, in one account: compute, a database, file storage, mail, access control. The free tier covers compute, so starting costs nothing.</p>
+          <p>File storage is where a production tool spends its money, and Cloudflare’s pricing for it is by far the cheapest among the cloud providers. Zero Trust adds tight access policies for the admin side at no extra cost.</p>
+          <h3>Both</h3>
+          <p>Both have very strong support in LLM coding agents, which makes setting up a self-hosted instance comparatively easy, even without a developer on the team.</p>
+        </Modal>
       </section>
 
       <section class="sec" id="hosted">

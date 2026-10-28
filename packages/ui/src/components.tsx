@@ -1,6 +1,6 @@
 /** The components the site uses, on the design-system classes (actions.css, forms.css, feedback.css). */
 import type { ComponentChildren, JSX } from "preact";
-import { useId } from "preact/hooks";
+import { useEffect, useId, useRef } from "preact/hooks";
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
@@ -98,4 +98,21 @@ export function Banner({ kind, icon, title, children, action, role }: { kind: "o
 
 export function Spinner({ size }: { size?: "lg" }) {
   return <span class={cx("f-spinner", size && "f-spinner--lg")} role="status" aria-label="Loading" />;
+}
+
+/** A modal on the native <dialog>: Escape and the close button close it; the scrim is the backdrop. */
+export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ComponentChildren }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal();
+    else if (!open && d.open) d.close();
+  }, [open]);
+  return (
+    <dialog ref={ref} class="f-modal" onClose={onClose} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} aria-labelledby="modal-title">
+      <div class="f-modal__head"><h2 class="f-modal__title" id="modal-title">{title}</h2><IconButton icon="close" label="Close" onClick={onClose} /></div>
+      <div class="f-modal__body">{children}</div>
+    </dialog>
+  );
 }

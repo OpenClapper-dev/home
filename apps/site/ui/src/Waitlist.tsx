@@ -47,7 +47,7 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
       <Field label="Email" required help="For the confirmation now and the invite later. Nothing else." error={errors.email}>
         {(id, invalid) => <Input id={id} invalid={invalid} type="email" autoComplete="email" required maxLength={LIMITS.email} value={s.email} onInput={(e) => set({ ...s, email: e.currentTarget.value })} />}
       </Field>
-      <Disclose label="Optional: a bit about me" open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.positions || errors.years || errors.other_position)}>
+      <Disclose label="A bit more information about you" open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.positions || errors.years || errors.other_position)}>
         <Field label="First name or nickname" error={errors.nickname}>
           {(id, invalid) => <Input id={id} invalid={invalid} autoComplete="given-name" maxLength={LIMITS.nickname} value={s.nickname} onInput={(e) => set({ ...s, nickname: e.currentTarget.value })} />}
         </Field>

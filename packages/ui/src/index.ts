@@ -14,6 +14,7 @@ import "./design/actions.css";
 import "./design/navigation.css";
 import "./design/forms.css";
 import "./design/feedback.css";
+import "./design/overlays.css";
 import "./design/base.css";
 
 export * from "./components.tsx";
