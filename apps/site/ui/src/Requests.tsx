@@ -24,8 +24,6 @@ export function Requests() {
   const ts = useTurnstile("request");
 
   const patch = (i: number, p: Partial<Entry>) => set({ ...s, entries: s.entries.map((e, j) => (j === i ? { ...e, ...p } : e)) });
-| "prototype") => ({ on: s.entries.every((e) => e[flag]), mixed: s.entries.some((e) => e[flag]) && !s.entries.every((e) => e[flag]) });
-  const setAll = (flag: "test" | "prototype", v: boolean) => set({ ...s, entries: s.entries.map((e) => ({ ...e, [flag]: v })) });
   const wantsContact = s.entries.some((e) => e.test || e.prototype);
 
   const submit = async (e: Event) => {
