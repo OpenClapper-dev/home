@@ -40,10 +40,13 @@ a.f-btn--secondary, a.f-btn--secondary:hover, a.f-btn--ghost, a.f-btn--ghost:hov
  */
 dialog.f-modal { position: fixed; inset: 0; padding: 0; margin: auto; width: min(560px, calc(100vw - 2 * var(--space-5))); max-height: calc(100vh - 2 * var(--space-5)); opacity: 0; transform: translateY(8px) scale(0.98); transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), overlay var(--dur) allow-discrete, display var(--dur) allow-discrete; }
 dialog.f-modal[open] { opacity: 1; transform: none; }
+/* Closed: core's .f-modal is display: flex, which would keep an invisible box over the page that eats clicks. */
+dialog.f-modal:not([open]) { display: none; }
 @starting-style { dialog.f-modal[open] { opacity: 0; transform: translateY(8px) scale(0.98); } }
 dialog.f-modal::backdrop { background: var(--scrim); opacity: 0; transition: opacity var(--dur) var(--ease), overlay var(--dur) allow-discrete, display var(--dur) allow-discrete; }
 dialog.f-modal[open]::backdrop { opacity: var(--scrim-alpha); }
 @starting-style { dialog.f-modal[open]::backdrop { opacity: 0; } }
+html { scrollbar-gutter: stable; }
 html:has(dialog.f-modal[open]) { overflow: hidden; }
 .f-modal__body { display: flex; flex-direction: column; gap: var(--space-3); }
 .f-modal__body h3 { font: var(--weight-bold) var(--text-title)/var(--lh-snug) var(--font-sans); margin-top: var(--space-2); }
