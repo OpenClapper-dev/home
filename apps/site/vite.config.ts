@@ -25,6 +25,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: { input: { index: here("ui/index.html"), privacy: here("ui/privacy.html"), admin: here("ui/admin/index.html") } },
   },
-  // Local dev: the Worker (`pnpm -C apps/site dev:worker`, ADMIN_DEV_BYPASS on) on :8787.
-  server: { port: 5173, strictPort: true, proxy: { "/api": "http://localhost:8787", "/admin/api": "http://localhost:8787" } },
+  // Local dev: the Worker (`pnpm -C apps/site dev:worker`, ADMIN_DEV_BYPASS on) on :8790.
+  server: { port: 5180, strictPort: true, proxy: { "/api": "http://localhost:8790", "/admin/api": "http://localhost:8790" } },
 });

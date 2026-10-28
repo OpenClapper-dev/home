@@ -2,7 +2,7 @@
 
 ```sh
 make init    # writes apps/site/.dev.vars (ADMIN_DEV_BYPASS, the Turnstile test secret), the Worker types, the local D1 schema
-make dev     # Worker on :8787, page on :5173 (Vite proxies /api and /admin/api to the Worker)
+make dev     # Worker on :8790, page on :5180 (Vite proxies /api and /admin/api to the Worker; core keeps 8787/5173)
 ```
 
 Locally there is no Access: `/admin/` is open (`admin@localhost`). The forms use Cloudflare's visible

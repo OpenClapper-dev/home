@@ -10,7 +10,7 @@ Email Service. [docs/](docs/README.md) has the details.
 
 ```sh
 make init    # once: local dev files, Worker types, local D1 schema
-make dev     # Worker on :8787 and the page on :5173 (admin at /admin/, no sign-in locally)
+make dev     # Worker on :8790 and the page on :5180 (admin at /admin/, no sign-in locally)
 make check   # what CI runs: lint, typecheck, tests, build dry runs
 ```
 

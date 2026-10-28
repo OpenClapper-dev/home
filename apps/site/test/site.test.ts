@@ -82,7 +82,7 @@ describe("turnstile", () => {
     siteverify = { success: true, hostname: "example.com", metadata: { result_with_testing_key: true } };
     await json(call(base, "POST", "/api/waitlist", { body: waitlist() }), 403);
     const local: Env = { ...base, ACCESS_TEAM_DOMAIN: "", ACCESS_AUD: "", ADMIN_DEV_BYPASS: "true" };
-    await json(call(local, "POST", "/api/waitlist", { body: waitlist(), host: "localhost:8787" }), 200);
+    await json(call(local, "POST", "/api/waitlist", { body: waitlist(), host: "localhost:8790" }), 200);
     await json(call(local, "POST", "/api/waitlist", { body: waitlist({ email: "x@example.test" }) }), 403);
   });
   test("without the secret every submission is refused", async () => {
@@ -175,7 +175,7 @@ describe("admin", () => {
   test("the local bypass works only on localhost", async () => {
     const bypass: Env = { ...base, ACCESS_TEAM_DOMAIN: "", ACCESS_AUD: "", ADMIN_DEV_BYPASS: "true" };
     await json(call(bypass, "GET", "/admin/api/whoami"), 401);
-    expect((await json(call(bypass, "GET", "/admin/api/whoami", { host: "localhost:8787" }), 200)).email).toBe("admin@localhost");
+    expect((await json(call(bypass, "GET", "/admin/api/whoami", { host: "localhost:8790" }), 200)).email).toBe("admin@localhost");
   });
   test("the waiting list, its CSV of confirmed addresses, the invite mark and deletion", async () => {
     siteverify = passFor("waitlist");

@@ -12,5 +12,5 @@ init: ## Write the gitignored dev files, generate the Worker types and apply D1 
 check: ## The CI lane: lint, typecheck, unit and route tests, build dry runs
 	pnpm check
 
-dev: ## Worker on :8787 (local D1, no Access: admin@localhost) and the page on :5173
+dev: ## Worker on :8790 (local D1, no Access: admin@localhost) and the page on :5180 (core keeps 8787/5173)
 	pnpm dev

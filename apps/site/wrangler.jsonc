@@ -22,7 +22,7 @@
     "ACCESS_TEAM_DOMAIN": "",
     "ACCESS_AUD": "",
     // Where the confirmation link points and who the confirmation mail is from.
-    "SITE_URL": "http://localhost:5173",
+    "SITE_URL": "http://localhost:5180",
     "MAIL_FROM": "OpenClapper <noreply@openclapper.org>"
   },
   // Transactional mail (the waiting list's confirmation): Cloudflare Email Service. `wrangler dev`

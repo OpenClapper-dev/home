@@ -39,4 +39,4 @@ The owner talks to you in English.
 make check   # lint, typecheck, unit and route tests, build dry runs: the same lane CI runs
 ```
 
-For the API, `make dev` and `curl` against `localhost:8787` (the Turnstile test keys always pass locally; `.dev.vars` has the secret, `scripts/dev-init.sh` writes it). The admin view is at `localhost:5173/admin/` without a sign-in locally. Say what was and was not clicked through.
+For the API, `make dev` and `curl` against `localhost:8790` (the Turnstile test keys always pass locally; `.dev.vars` has the secret, `scripts/dev-init.sh` writes it). The admin view is at `localhost:5180/admin/` without a sign-in locally. Say what was and was not clicked through.

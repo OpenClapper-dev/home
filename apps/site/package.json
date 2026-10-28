@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --parallel /^dev:/",
-    "dev:worker": "wrangler dev --port 8787",
+    "dev:worker": "wrangler dev --port 8790",
     "dev:ui": "vite",
     "build": "vite build",
     "types": "wrangler types",
