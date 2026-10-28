@@ -74,19 +74,23 @@ export function Page() {
         <p class="sec__sub">Three apps, one system.</p>
         <p class="prose">Features are deliberately not listed here: the project is in alpha, many of them are shaped by one cinematographer’s workflow, and they will change and merge as more people use it. A detailed list of supported workflows comes once OpenClapper leaves alpha.</p>
         <div class="eco">
+          <div class="eco__head" aria-hidden="true"><span /><span>App</span><span>Platform</span><span>What it is</span></div>
           <div class="eco__row">
             <img class="eco__icon" src="/icons/studio.svg" alt="" width="96" height="96" />
-            <div class="eco__name"><h3>Studio</h3><span class="eco__platform">Web</span></div>
+            <h3 class="eco__name">Studio</h3>
+            <span class="eco__platform">Web</span>
             <p class="eco__desc">The main web application, where the work is done: organising and planning a production.</p>
           </div>
           <div class="eco__row">
             <img class="eco__icon" src="/icons/phone.svg" alt="" width="96" height="96" />
-            <div class="eco__name"><h3>Mobile</h3><span class="eco__platform">Phone</span></div>
+            <h3 class="eco__name">Mobile</h3>
+            <span class="eco__platform">Phone</span>
             <p class="eco__desc">A lightweight companion that helps you stay on track, closely integrated with the Studio.</p>
           </div>
           <div class="eco__row">
             <img class="eco__icon" src="/icons/admin.svg" alt="" width="96" height="96" />
-            <div class="eco__name"><h3>Admin</h3><span class="eco__platform">Self-hosting</span></div>
+            <h3 class="eco__name">Admin</h3>
+            <span class="eco__platform">Web</span>
             <p class="eco__desc">The operator’s side of an instance: user management and resource management for whoever runs OpenClapper for a school, a company or a crew.</p>
           </div>
         </div>
