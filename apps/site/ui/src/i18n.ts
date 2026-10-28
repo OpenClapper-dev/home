@@ -152,7 +152,7 @@ const de: Dict = {
   origin: {
     h: "Woher es kommt", sub: "Ein Produktionswerkzeug aus dem Produktionsbüro.",
     p: [
-      "Ich habe als 1. Aufnahmeleiter, im amerikanischen System ungefähr ein 2nd AD, Vorbereitung und Dreh kleinerer unabhängiger Projekte begleitet. Ich weiß aus erster Hand, wie schlecht die Werkzeuge sind, um eine Produktion zu organisieren und alle auf einem Stand zu halten: Tabellen, Gruppenchats, PDFs, die beim Ausdrucken schon veraltet sind.",
+      "Ich habe als 1. Aufnahmeleiter Vorbereitung und Dreh kleinerer unabhängiger Projekte begleitet. Ich weiß aus erster Hand, wie schlecht die Werkzeuge sind, um eine Produktion zu organisieren und alle auf einem Stand zu halten: Tabellen, Gruppenchats, PDFs, die beim Ausdrucken schon veraltet sind.",
       "Ich habe die Branche verlassen und bin Vollzeit-Entwickler geworden. Kaum habe ich eigene Hobbyprojekte gedreht, war der Bedarf nach einem Werkzeug für die Drehorganisation sofort wieder da. OpenClapper ist meine Antwort darauf.",
       "Statt Zeit und Geld in ein Nischenwerkzeug zu stecken, das nur ich benutze, will ich eine echte Open-Source-Lösung für die Organisation von Vorbereitung und Dreh bauen.",
     ],
