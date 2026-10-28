@@ -8,7 +8,7 @@ import { Banner, Button, Check, Field, IconButton, Input, Textarea } from "@open
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { useDraft } from "./drafts.ts";
-import { emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
+import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
 interface Entry { title: string; text: string; test: boolean; prototype: boolean }
@@ -87,10 +87,12 @@ export function Requests() {
       <div>
         <Button kind="secondary" icon="plus" disabled={s.entries.length >= LIMITS.entries} onClick={() => set({ ...s, entries: [...s.entries, emptyEntry()] })}>Add another request</Button>
       </div>
+      <Disclose label="Optional: a bit about me and how to reach me" open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.positions || errors.years || errors.other_position)}>
       <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
       <Field label="How to reach you" help={wantsContact ? "You asked to test or be contacted: say how, in your own words. An email, a handle on whatever network, a phone number; whatever you are comfortable with." : "Only if you want a reply. An email, a handle, anything; or leave it empty."} error={errors.contact}>
         {(id, invalid) => <Textarea id={id} invalid={invalid} maxLength={LIMITS.contact} rows={2} value={s.contact} onInput={(e) => set({ ...s, contact: e.currentTarget.value })} placeholder="@handle on Instagram, or name@example.com" />}
       </Field>
+      </Disclose>
       <div class="turnstile" ref={ts.ref} />
       {(errors.turnstile || errors.form || errors.entries || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.entries ?? errors.turnstile ?? "The bot check could not load"} role="alert">{ts.failed && !errors.form ? "Reload the page and try again." : undefined}</Banner>}
       <div class="form__actions">

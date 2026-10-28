@@ -30,3 +30,6 @@ button.f-check, button.f-switch { background: none; border: 0; padding: 0; color
 .meta { color: var(--text-dim); font-size: var(--text-caption); }
 .num { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; } }
+/* Links styled as buttons keep the button's text colour on hover (the page's a:hover would turn it to the accent). */
+a.f-btn, a.f-btn:hover { color: var(--on-accent); text-decoration: none; }
+a.f-btn--secondary, a.f-btn--secondary:hover, a.f-btn--ghost, a.f-btn--ghost:hover { color: var(--text); }

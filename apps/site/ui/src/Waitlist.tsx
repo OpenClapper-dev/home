@@ -4,7 +4,7 @@ import { Banner, Button, Field, Input } from "@openclapper/home-ui";
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { useDraft } from "./drafts.ts";
-import { emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
+import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
 interface State { email: string; nickname: string; person: PersonState }
@@ -44,15 +44,15 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
       {confirmed === "yes" && <Banner kind="ok" title="You are on the list" role="status">Thanks for confirming. I will mail you when there is a spot to test.</Banner>}
       {confirmed === "no" && <Banner kind="warn" title="That link does not work any more" role="alert">It was used already or is older than 7 days. Sign up again below and a fresh one comes right away.</Banner>}
       {draft.restored && <div class="form__draft">Your unsent draft was restored. <button type="button" class="f-linkbtn" onClick={draft.discard}>Start over</button></div>}
-      <div class="form__row">
-        <Field label="Email" required help="For the confirmation now and the invite later. Nothing else." error={errors.email}>
-          {(id, invalid) => <Input id={id} invalid={invalid} type="email" autoComplete="email" required maxLength={LIMITS.email} value={s.email} onInput={(e) => set({ ...s, email: e.currentTarget.value })} />}
-        </Field>
+      <Field label="Email" required help="For the confirmation now and the invite later. Nothing else." error={errors.email}>
+        {(id, invalid) => <Input id={id} invalid={invalid} type="email" autoComplete="email" required maxLength={LIMITS.email} value={s.email} onInput={(e) => set({ ...s, email: e.currentTarget.value })} />}
+      </Field>
+      <Disclose label="Optional: a bit about me" open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.positions || errors.years || errors.other_position)}>
         <Field label="First name or nickname" error={errors.nickname}>
           {(id, invalid) => <Input id={id} invalid={invalid} autoComplete="given-name" maxLength={LIMITS.nickname} value={s.nickname} onInput={(e) => set({ ...s, nickname: e.currentTarget.value })} />}
         </Field>
-      </div>
-      <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
+        <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
+      </Disclose>
       <div class="turnstile" ref={ts.ref} />
       {(errors.turnstile || errors.form || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.turnstile ?? "The bot check could not load"} role="alert">{ts.failed && !errors.form ? "Reload the page and try again." : undefined}</Banner>}
       <div class="form__actions">
