@@ -6,7 +6,7 @@ A 400 names the field (`{ error, field }`) and the page shows it under that fiel
 
 ## About you (both forms)
 
-Optional in both: **positions** (many, from `packages/vocab/src/positions.ts`, grouped by department,
+Optional in both: the **film system** worked in (German, US / International, Other), **positions** (many, from `packages/vocab/src/positions.ts`, grouped by department,
 with a filter that also hits the German titles; "Other" opens a free text), and **years in the industry**
 (one number, across every position). Departments are derived from the positions, never asked.
 

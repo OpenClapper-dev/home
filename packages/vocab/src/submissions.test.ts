@@ -5,7 +5,9 @@ import { parseRequest, parseWaitlist, SubmissionError } from "./submissions.ts";
 const field = (fn: () => unknown) => { try { fn(); } catch (e) { return (e as SubmissionError).field; } return null; };
 
 test("waitlist: the email is the only required field", () => {
-  assert.deepEqual(parseWaitlist({ email: " Me@Example.org " }), { email: "Me@Example.org", nickname: null, positions: [], other_position: null, years: null });
+  assert.deepEqual(parseWaitlist({ email: " Me@Example.org " }), { email: "Me@Example.org", nickname: null, system: null, positions: [], other_position: null, years: null });
+  assert.equal(parseWaitlist({ email: "a@b.co", system: "german" }).system, "german");
+  assert.equal(field(() => parseWaitlist({ email: "a@b.co", system: "martian" })), "system");
   assert.equal(field(() => parseWaitlist({})), "email");
   assert.equal(field(() => parseWaitlist({ email: "nope" })), "email");
   assert.equal(field(() => parseWaitlist({ email: "a@b.co", years: 99 })), "years");

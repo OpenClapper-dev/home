@@ -8,8 +8,8 @@ import type { Ctx } from "./index.ts";
 
 export const STATUSES = ["new", "seen", "done"] as const;
 
-interface WaitlistRow { id: string; email: string; nickname: string | null; positions: string; other_position: string | null; years: number | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
-interface RequestRow { id: string; created_at: string; positions: string; other_position: string | null; years: number | null; contact: string | null; status: string }
+interface WaitlistRow { id: string; email: string; nickname: string | null; system: string | null; positions: string; other_position: string | null; years: number | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
+interface RequestRow { id: string; created_at: string; system: string | null; positions: string; other_position: string | null; years: number | null; contact: string | null; status: string }
 interface EntryRow { id: string; request_id: string; position: number; title: string | null; text: string; test: number; prototype: number }
 
 const csvCell = (v: string | number | null) => { const s = v === null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
@@ -18,15 +18,15 @@ export function registerAdmin(router: Router<Ctx>) {
   router.on("GET", "/admin/api/whoami", async ({ admin }) => json({ email: admin }));
 
   router.on("GET", "/admin/api/waitlist", async ({ env }) => {
-    const { results } = await env.DB.prepare("SELECT id, email, nickname, positions, other_position, years, created_at, confirmed_at, invited_at FROM waitlist ORDER BY created_at DESC").all<WaitlistRow>();
+    const { results } = await env.DB.prepare("SELECT id, email, nickname, system, positions, other_position, years, created_at, confirmed_at, invited_at FROM waitlist ORDER BY created_at DESC").all<WaitlistRow>();
     return json({ waitlist: results.map((r) => ({ ...r, positions: JSON.parse(r.positions) as string[] })) });
   });
 
   /** The confirmed addresses, for an invite round: email, nickname, positions, years, confirmed_at. */
   router.on("GET", "/admin/api/waitlist.csv", async ({ env }) => {
-    const { results } = await env.DB.prepare("SELECT email, nickname, positions, other_position, years, confirmed_at, invited_at FROM waitlist WHERE confirmed_at IS NOT NULL ORDER BY confirmed_at").all<WaitlistRow>();
-    const lines = ["email,nickname,positions,other_position,years,confirmed_at,invited_at", ...results.map((r) =>
-      [r.email, r.nickname, (JSON.parse(r.positions) as string[]).join(" "), r.other_position, r.years, r.confirmed_at, r.invited_at].map(csvCell).join(","))];
+    const { results } = await env.DB.prepare("SELECT email, nickname, system, positions, other_position, years, confirmed_at, invited_at FROM waitlist WHERE confirmed_at IS NOT NULL ORDER BY confirmed_at").all<WaitlistRow>();
+    const lines = ["email,nickname,system,positions,other_position,years,confirmed_at,invited_at", ...results.map((r) =>
+      [r.email, r.nickname, r.system, (JSON.parse(r.positions) as string[]).join(" "), r.other_position, r.years, r.confirmed_at, r.invited_at].map(csvCell).join(","))];
     return new Response(`${lines.join("\n")}\n`, { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="openclapper-waitlist.csv"', "cache-control": "no-store" } });
   });
 
@@ -45,7 +45,7 @@ export function registerAdmin(router: Router<Ctx>) {
 
   router.on("GET", "/admin/api/requests", async ({ env }) => {
     const [reqs, entries] = await env.DB.batch([
-      env.DB.prepare("SELECT id, created_at, positions, other_position, years, contact, status FROM requests ORDER BY created_at DESC"),
+      env.DB.prepare("SELECT id, created_at, system, positions, other_position, years, contact, status FROM requests ORDER BY created_at DESC"),
       env.DB.prepare("SELECT id, request_id, position, title, text, test, prototype FROM request_entries ORDER BY request_id, position"),
     ]);
     const byRequest = new Map<string, EntryRow[]>();

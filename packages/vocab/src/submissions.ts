@@ -29,7 +29,14 @@ export const LIMITS = {
 /** Loose on purpose: a confirmation mail decides whether the address works. */
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Which film system the person worked in: the titles, departments and habits differ. */
+export const SYSTEMS = ["german", "us", "other"] as const;
+export type FilmSystem = (typeof SYSTEMS)[number];
+export const SYSTEM_LABEL: Record<FilmSystem, string> = { german: "German", us: "US / International", other: "Other" };
+
 export interface Person {
+  /** The system the person worked in; null when not given. */
+  system: FilmSystem | null;
   /** Position ids (positions.ts), in the order picked. */
   positions: string[];
   /** What "other" means when it is picked; null otherwise. */
@@ -86,7 +93,12 @@ function person(b: Record<string, unknown>): Person {
     if (typeof n !== "number" || !Number.isInteger(n) || n < 0 || n > LIMITS.years) throw new SubmissionError("years", `years must be a whole number from 0 to ${LIMITS.years}`);
     years = n;
   }
-  return { positions, other_position, years };
+  let system: FilmSystem | null = null;
+  if (b.system !== undefined && b.system !== null && b.system !== "") {
+    if (!(SYSTEMS as readonly string[]).includes(b.system as string)) throw new SubmissionError("system", "unknown system");
+    system = b.system as FilmSystem;
+  }
+  return { system, positions, other_position, years };
 }
 
 export function parseWaitlist(v: unknown): WaitlistSubmission {

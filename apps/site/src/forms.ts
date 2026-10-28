@@ -55,11 +55,11 @@ export function registerForms(router: Router<Ctx>) {
     const t = token();
     const positions = JSON.stringify(w.positions);
     if (existing) {
-      await env.DB.prepare("UPDATE waitlist SET nickname = ?2, positions = ?3, other_position = ?4, years = ?5, token = ?6, token_sent_at = ?7 WHERE id = ?1")
-        .bind(existing.id, w.nickname, positions, w.other_position, w.years, t, now.toISOString()).run();
+      await env.DB.prepare("UPDATE waitlist SET nickname = ?2, positions = ?3, other_position = ?4, years = ?5, token = ?6, token_sent_at = ?7, system = ?8 WHERE id = ?1")
+        .bind(existing.id, w.nickname, positions, w.other_position, w.years, t, now.toISOString(), w.system).run();
     } else {
-      await env.DB.prepare("INSERT INTO waitlist (id, email, nickname, positions, other_position, years, created_at, token, token_sent_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?7)")
-        .bind(crypto.randomUUID(), w.email, w.nickname, positions, w.other_position, w.years, now.toISOString(), t).run();
+      await env.DB.prepare("INSERT INTO waitlist (id, email, nickname, positions, other_position, years, created_at, token, token_sent_at, system) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?7, ?9)")
+        .bind(crypto.randomUUID(), w.email, w.nickname, positions, w.other_position, w.years, now.toISOString(), t, w.system).run();
     }
     try {
       await sendConfirmation(env.EMAIL, env, w.email, t);
@@ -89,8 +89,8 @@ export function registerForms(router: Router<Ctx>) {
     await guard(ctx, body, "request");
     const id = crypto.randomUUID();
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO requests (id, created_at, positions, other_position, years, contact) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
-        .bind(id, new Date().toISOString(), JSON.stringify(r.positions), r.other_position, r.years, r.contact),
+      env.DB.prepare("INSERT INTO requests (id, created_at, positions, other_position, years, contact, system) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
+        .bind(id, new Date().toISOString(), JSON.stringify(r.positions), r.other_position, r.years, r.contact, r.system),
       ...r.entries.map((e, i) =>
         env.DB.prepare("INSERT INTO request_entries (id, request_id, position, title, text, test, prototype) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
           .bind(crypto.randomUUID(), id, i, e.title, e.text, e.test ? 1 : 0, e.prototype ? 1 : 0)),

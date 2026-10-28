@@ -87,7 +87,7 @@ export function Requests() {
       <div>
         <Button kind="secondary" icon="plus" disabled={s.entries.length >= LIMITS.entries} onClick={() => set({ ...s, entries: [...s.entries, emptyEntry()] })}>Add another request</Button>
       </div>
-      <Disclose label="A bit more information about you and how to reach me" open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.positions || errors.years || errors.other_position)}>
+      <Disclose label="A bit more information about you and how to reach me" open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.system || errors.positions || errors.years || errors.other_position)}>
       <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
       <Field label="How to reach you" help={wantsContact ? "You asked to test or be contacted: say how, in your own words. An email, a handle on whatever network, a phone number; whatever you are comfortable with." : "Only if you want a reply. An email, a handle, anything; or leave it empty."} error={errors.contact}>
         {(id, invalid) => <Textarea id={id} invalid={invalid} maxLength={LIMITS.contact} rows={2} value={s.contact} onInput={(e) => set({ ...s, contact: e.currentTarget.value })} placeholder="@handle on Instagram, or name@example.com" />}

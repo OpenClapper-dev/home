@@ -179,7 +179,7 @@ describe("admin", () => {
   });
   test("the waiting list, its CSV of confirmed addresses, the invite mark and deletion", async () => {
     siteverify = passFor("waitlist");
-    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "a@example.test", nickname: 'Ann "A"', positions: ["dp"] }) }), 200);
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "a@example.test", nickname: 'Ann "A"', positions: ["dp"], system: "german" }) }), 200);
     await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "b@example.test" }) }), 200);
     await call(base, "GET", new URL(sent[0].text.match(/https:\S+/)![0]).pathname);
     const t = await jwt();
@@ -187,7 +187,7 @@ describe("admin", () => {
     expect(list.waitlist.map((w) => [w.email, !!w.confirmed_at])).toEqual([["b@example.test", false], ["a@example.test", true]]);
     expect(list.waitlist[1].positions).toEqual(["dp"]);
     const csv = await (await call(base, "GET", "/admin/api/waitlist.csv", { jwt: t })).text();
-    expect(csv.split("\n")[1].startsWith('a@example.test,"Ann ""A""",dp,,,')).toBe(true);
+    expect(csv.split("\n")[1].startsWith('a@example.test,"Ann ""A""",german,dp,,,')).toBe(true);
     expect(csv).not.toContain("b@example.test");
     const a = list.waitlist[1].id;
     await json(call(base, "PATCH", `/admin/api/waitlist/${a}`, { jwt: t, body: { invited: true } }), 200);

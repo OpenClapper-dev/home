@@ -3,16 +3,16 @@
  * "other" means, years in the industry. The position list itself opens on demand too; the picked ones
  * always show.
  */
-import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, positionById, searchPositions } from "@openclapper/home-vocab";
+import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, positionById, searchPositions, SYSTEM_LABEL, SYSTEMS, type FilmSystem } from "@openclapper/home-vocab";
 import { Button, Chip, Field, Icon, Input } from "@openclapper/home-ui";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 
-export interface PersonState { positions: string[]; other_position: string; years: string }
-export const emptyPerson = (): PersonState => ({ positions: [], other_position: "", years: "" });
-export const personIsEmpty = (p: PersonState) => p.positions.length === 0 && !p.other_position && !p.years;
+export interface PersonState { system: FilmSystem | ""; positions: string[]; other_position: string; years: string }
+export const emptyPerson = (): PersonState => ({ system: "", positions: [], other_position: "", years: "" });
+export const personIsEmpty = (p: PersonState) => !p.system && p.positions.length === 0 && !p.other_position && !p.years;
 /** What the API takes (packages/vocab parses it strictly). */
-export const personBody = (p: PersonState) => ({ positions: p.positions, other_position: p.other_position || null, years: p.years === "" ? null : Number(p.years) });
+export const personBody = (p: PersonState) => ({ system: p.system || null, positions: p.positions, other_position: p.other_position || null, years: p.years === "" ? null : Number(p.years) });
 
 /** A block that opens on a click and stays open once it holds something (a restored draft, an error). */
 export function Disclose({ label, open: forced, children }: { label: string; open?: boolean; children: ComponentChildren }) {
@@ -35,6 +35,13 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
   const showList = listOpen || q.length > 0;
   return (
     <>
+      <Field label="Which system did you work in?" help="Titles and habits differ; it helps me read your positions right. Click again to clear." error={errors.system}>
+        {(id) => (
+          <div class="f-seg" role="radiogroup" id={id} aria-label="Film system">
+            {SYSTEMS.map((s) => <button type="button" class="f-seg__opt" role="radio" aria-checked={value.system === s} key={s} onClick={() => onChange({ ...value, system: value.system === s ? "" : s })}>{SYSTEM_LABEL[s]}</button>)}
+          </div>
+        )}
+      </Field>
       <Field label="Your positions" help="Every role you have worked in; many people have more than one." error={errors.positions}>
         {(id, invalid) => (
           <div class="positions">
