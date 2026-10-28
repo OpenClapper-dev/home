@@ -1,0 +1,32 @@
+/* Page defaults on the tokens: box model, the page font, focus rings, and prose. Layouts stay in the app. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+html { background: var(--bg); color: var(--text); font: var(--weight-regular) var(--text-body-lg)/var(--lh-body) var(--font-sans); -webkit-font-smoothing: antialiased; text-size-adjust: 100%; }
+:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
+a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--accent-hover); text-decoration-thickness: 2px; }
+h1, h2, h3, p, ul, ol { margin: 0; }
+textarea { font: inherit; }
+.f-textarea { display: block; width: 100%; min-height: 120px; padding: 10px; border: var(--bw) solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: var(--weight-regular) var(--text-body-lg)/var(--lh-body) var(--font-sans); resize: vertical; transition: border-color var(--dur-fast) var(--ease); }
+.f-textarea:hover { border-color: var(--border-strong); }
+.f-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
+.f-textarea.is-error { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.f-textarea::placeholder { color: var(--text-dim); opacity: 1; }
+.f-input input { font-size: var(--text-body-lg); }
+/* Buttons used as checkboxes and switches keep the design-system look (components.css in core). */
+button.f-check, button.f-switch { background: none; border: 0; padding: 0; color: inherit; font: inherit; }
+.f-chip { font-size: var(--text-body); height: 36px; }
+/* Inline SVG icons sit on the text baseline at the size of the surrounding text. */
+.f-svg { width: 1.25em; height: 1.25em; flex: none; vertical-align: -0.3em; fill: currentColor; }
+.f-btn .f-svg, .f-banner > .f-svg { width: 20px; height: 20px; }
+.f-banner > .f-svg { color: var(--text); }
+.f-banner--ok > .f-svg { color: var(--ok); }
+.f-banner--warn > .f-svg { color: var(--warn-ink); }
+.f-banner--danger > .f-svg { color: var(--danger); }
+.f-banner--info > .f-svg { color: var(--accent); }
+.f-field__error .f-svg { width: 15px; height: 15px; }
+.f-check__box .f-svg { width: 16px; height: 16px; }
+.f-switch__knob .f-svg { width: 14px; height: 14px; }
+.meta { color: var(--text-dim); font-size: var(--text-caption); }
+.num { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; } }
