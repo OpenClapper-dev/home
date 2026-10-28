@@ -21,6 +21,7 @@ const PATHS = {
   "open-in-new": "M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2z",
   download: "M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z",
   minus: "M19 13H5v-2h14z",
+  translate: "m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z",
 } as const;
 export type IconName = keyof typeof PATHS;
 
@@ -51,11 +52,11 @@ export function IconButton({ icon, label, kind = "ghost", size, class: extra, ..
 }
 
 /** Label, control, help and error in one column. The child gets the label's id to point at. */
-export function Field({ label, required, help, error, children }: { label: string; required?: boolean; help?: ComponentChildren; error?: string | null; children: (id: string, invalid: boolean) => ComponentChildren }) {
+export function Field({ label, required, help, error, optional = "optional", children }: { label: string; required?: boolean; help?: ComponentChildren; error?: string | null; optional?: string; children: (id: string, invalid: boolean) => ComponentChildren }) {
   const id = useId();
   return (
     <div class="f-field">
-      <label class="f-field__label" for={id}>{label}{required && <span class="f-req" aria-hidden="true"> *</span>}{!required && <span class="meta"> · optional</span>}</label>
+      <label class="f-field__label" for={id}>{label}{required && <span class="f-req" aria-hidden="true"> *</span>}{!required && <span class="meta"> · {optional}</span>}</label>
       {children(id, !!error)}
       {help && !error && <div class="f-field__help">{help}</div>}
       {error && <div class="f-field__error" role="alert"><Icon name="alert-circle" />{error}</div>}

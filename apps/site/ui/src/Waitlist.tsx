@@ -4,6 +4,7 @@ import { Banner, Button, Field, Input } from "@openclapper/home-ui";
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { useDraft } from "./drafts.ts";
+import { useT } from "./i18n.ts";
 import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
@@ -12,6 +13,7 @@ const empty = (): State => ({ email: "", nickname: "", person: emptyPerson() });
 const isEmpty = (s: State) => !s.email && !s.nickname && personIsEmpty(s.person);
 
 export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
+  const [t] = useT();
   const [s, set, draft] = useDraft<State>("draft:waitlist", empty, isEmpty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -20,7 +22,7 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (!ts.token) { setErrors({ turnstile: "The bot check has not finished yet; give it a moment." }); return; }
+    if (!ts.token) { setErrors({ turnstile: t.form.botWait }); return; }
     setBusy(true);
     setErrors({});
     try {
@@ -36,28 +38,26 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
     }
   };
 
-  if (done) {
-    return <Banner kind="ok" title="One more step: confirm your email" role="status">We sent a link to {done}. Open it within 7 days and you are on the list. No mail? Check the spam folder, then try again in ten minutes.</Banner>;
-  }
+  if (done) return <Banner kind="ok" title={t.wl.doneTitle} role="status">{t.wl.done(done)}</Banner>;
   return (
     <form class="form" onSubmit={submit} noValidate>
-      {confirmed === "yes" && <Banner kind="ok" title="You are on the list" role="status">Thanks for confirming. I will mail you when there is a spot to test.</Banner>}
-      {confirmed === "no" && <Banner kind="warn" title="That link does not work any more" role="alert">It was used already or is older than 7 days. Sign up again below and a fresh one comes right away.</Banner>}
-      {draft.restored && <div class="form__draft">Your unsent draft was restored. <button type="button" class="f-linkbtn" onClick={draft.discard}>Start over</button></div>}
-      <Field label="Email" required help="For the confirmation now and the invite later. Nothing else." error={errors.email}>
+      {confirmed === "yes" && <Banner kind="ok" title={t.wl.confirmedTitle} role="status">{t.wl.confirmed}</Banner>}
+      {confirmed === "no" && <Banner kind="warn" title={t.wl.expiredTitle} role="alert">{t.wl.expired}</Banner>}
+      {draft.restored && <div class="form__draft">{t.form.draftRestored} <button type="button" class="f-linkbtn" onClick={draft.discard}>{t.form.startOver}</button></div>}
+      <Field label={t.wl.email} required help={t.wl.emailHelp} error={errors.email}>
         {(id, invalid) => <Input id={id} invalid={invalid} type="email" autoComplete="email" required maxLength={LIMITS.email} value={s.email} onInput={(e) => set({ ...s, email: e.currentTarget.value })} />}
       </Field>
-      <Disclose label="A bit more information about you" open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.system || errors.positions || errors.years || errors.other_position)}>
-        <Field label="First name or nickname" error={errors.nickname}>
+      <Disclose label={t.form.more} open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.system || errors.positions || errors.years || errors.other_position)}>
+        <Field label={t.wl.nickname} error={errors.nickname} optional={t.form.optional}>
           {(id, invalid) => <Input id={id} invalid={invalid} autoComplete="given-name" maxLength={LIMITS.nickname} value={s.nickname} onInput={(e) => set({ ...s, nickname: e.currentTarget.value })} />}
         </Field>
         <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
       </Disclose>
       <div class="turnstile" ref={ts.ref} />
-      {(errors.turnstile || errors.form || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.turnstile ?? "The bot check could not load"} role="alert">{ts.failed && !errors.form ? "Reload the page and try again." : undefined}</Banner>}
+      {(errors.turnstile || errors.form || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.turnstile ?? t.form.botFailed} role="alert">{ts.failed && !errors.form ? t.form.reload : undefined}</Banner>}
       <div class="form__actions">
-        <Button type="submit" size="lg" loading={busy}>Join the waiting list</Button>
-        <span class="form__fine">Double opt-in: nothing is kept until you confirm. <a href="/privacy">Privacy</a></span>
+        <Button type="submit" size="lg" loading={busy}>{t.wl.submit}</Button>
+        <span class="form__fine">{t.wl.fine} <a href="/privacy">{t.form.privacy}</a></span>
       </div>
     </form>
   );

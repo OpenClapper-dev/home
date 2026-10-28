@@ -7,6 +7,7 @@ import { Banner, Button, Check, Field, IconButton, Input, Textarea } from "@open
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { useDraft } from "./drafts.ts";
+import { useT } from "./i18n.ts";
 import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
@@ -17,6 +18,8 @@ const empty = (): State => ({ entries: [emptyEntry()], person: emptyPerson(), co
 const isEmpty = (s: State) => s.entries.every((e) => !e.title && !e.text && !e.test && !e.prototype) && personIsEmpty(s.person) && !s.contact;
 
 export function Requests() {
+  const [t] = useT();
+  const r = t.rq;
   const [s, set, draft] = useDraft<State>("draft:requests", empty, isEmpty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -29,9 +32,9 @@ export function Requests() {
   const submit = async (e: Event) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    s.entries.forEach((en, i) => { if (!en.text.trim()) errs[`entries.${i}.text`] = "Write what you need; a sentence is enough."; });
+    s.entries.forEach((en, i) => { if (!en.text.trim()) errs[`entries.${i}.text`] = r.textRequired; });
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    if (!ts.token) { setErrors({ turnstile: "The bot check has not finished yet; give it a moment." }); return; }
+    if (!ts.token) { setErrors({ turnstile: t.form.botWait }); return; }
     setBusy(true);
     setErrors({});
     try {
@@ -49,45 +52,44 @@ export function Requests() {
 
   if (done) {
     return (
-      <Banner kind="ok" title={done === 1 ? "Thank you, your request is in" : `Thank you, your ${done} requests are in`} role="status"
-        action={<Button kind="secondary" size="sm" onClick={() => setDone(0)}>Send another</Button>}>I read every one of them.</Banner>
+      <Banner kind="ok" title={done === 1 ? r.doneTitle1 : r.doneTitleN(done)} role="status" action={<Button kind="secondary" size="sm" onClick={() => setDone(0)}>{r.another}</Button>}>{r.done}</Banner>
     );
   }
   return (
     <form class="form" onSubmit={submit} noValidate>
-      {draft.restored && <div class="form__draft">Your unsent draft was restored. <button type="button" class="f-linkbtn" onClick={draft.discard}>Start over</button></div>}
+      {draft.restored && <div class="form__draft">{t.form.draftRestored} <button type="button" class="f-linkbtn" onClick={draft.discard}>{t.form.startOver}</button></div>}
       {s.entries.map((en, i) => (
         <div class="entry" key={i}>
           <div class="entry__head">
-            <span class="entry__n">Request {i + 1}</span>
-            {s.entries.length > 1 && <IconButton icon="delete" size="sm" label={`Remove request ${i + 1}`} onClick={() => set({ ...s, entries: s.entries.filter((_, j) => j !== i) })} />}
+            <span class="entry__n">{r.n(i + 1)}</span>
+            {s.entries.length > 1 && <IconButton icon="delete" size="sm" label={r.removeN(i + 1)} onClick={() => set({ ...s, entries: s.entries.filter((_, j) => j !== i) })} />}
           </div>
-          <Field label="Title" error={errors[`entries.${i}.title`]}>
-            {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.title} value={en.title} onInput={(e) => patch(i, { title: e.currentTarget.value })} placeholder="Call sheets on the phone" />}
+          <Field label={r.title} error={errors[`entries.${i}.title`]} optional={t.form.optional}>
+            {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.title} value={en.title} onInput={(e) => patch(i, { title: e.currentTarget.value })} placeholder={r.titlePh} />}
           </Field>
-          <Field label="What do you need?" required help="Brainstorm, bullet points, a rant about the last shoot: anything goes. Which department, what went wrong, what would have helped." error={errors[`entries.${i}.text`]}>
+          <Field label={r.text} required help={r.textHelp} error={errors[`entries.${i}.text`]}>
             {(id, invalid) => <Textarea id={id} invalid={invalid} required maxLength={LIMITS.text} rows={6} value={en.text} onInput={(e) => patch(i, { text: e.currentTarget.value })} />}
           </Field>
           <div class="entry__flags">
-            <Check checked={en.test} onChange={(v) => patch(i, { test: v })}>I would test this</Check>
-            <Check checked={en.prototype} onChange={(v) => patch(i, { prototype: v })}>Contact me while shaping this</Check>
+            <Check checked={en.test} onChange={(v) => patch(i, { test: v })}>{r.test}</Check>
+            <Check checked={en.prototype} onChange={(v) => patch(i, { prototype: v })}>{r.prototype}</Check>
           </div>
         </div>
       ))}
       <div>
-        <Button kind="secondary" icon="plus" disabled={s.entries.length >= LIMITS.entries} onClick={() => set({ ...s, entries: [...s.entries, emptyEntry()] })}>Add another request</Button>
+        <Button kind="secondary" icon="plus" disabled={s.entries.length >= LIMITS.entries} onClick={() => set({ ...s, entries: [...s.entries, emptyEntry()] })}>{r.addAnother}</Button>
       </div>
-      <Disclose label="A bit more information about you and how to reach you" open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.system || errors.positions || errors.years || errors.other_position)}>
-      <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
-      <Field label="How to reach you" help={wantsContact ? "You asked to test or be contacted: say how, in your own words. An email, a handle on whatever network, a phone number; whatever you are comfortable with." : "Only if you want a reply. An email, a handle, anything; or leave it empty."} error={errors.contact}>
-        {(id, invalid) => <Textarea id={id} invalid={invalid} maxLength={LIMITS.contact} rows={2} value={s.contact} onInput={(e) => set({ ...s, contact: e.currentTarget.value })} placeholder="@handle on Instagram, or name@example.com" />}
-      </Field>
+      <Disclose label={t.form.moreContact} open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.system || errors.positions || errors.years || errors.other_position)}>
+        <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
+        <Field label={r.contact} help={wantsContact ? r.contactHelpWants : r.contactHelp} error={errors.contact} optional={t.form.optional}>
+          {(id, invalid) => <Textarea id={id} invalid={invalid} maxLength={LIMITS.contact} rows={2} value={s.contact} onInput={(e) => set({ ...s, contact: e.currentTarget.value })} placeholder={r.contactPh} />}
+        </Field>
       </Disclose>
       <div class="turnstile" ref={ts.ref} />
-      {(errors.turnstile || errors.form || errors.entries || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.entries ?? errors.turnstile ?? "The bot check could not load"} role="alert">{ts.failed && !errors.form ? "Reload the page and try again." : undefined}</Banner>}
+      {(errors.turnstile || errors.form || errors.entries || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.entries ?? errors.turnstile ?? t.form.botFailed} role="alert">{ts.failed && !errors.form ? t.form.reload : undefined}</Banner>}
       <div class="form__actions">
-        <Button type="submit" size="lg" loading={busy}>{s.entries.length > 1 ? `Send ${s.entries.length} requests` : "Send the request"}</Button>
-        <span class="form__fine">No account, no name needed. Drafts stay in this browser until sent. <a href="/privacy">Privacy</a></span>
+        <Button type="submit" size="lg" loading={busy}>{s.entries.length > 1 ? r.submitN(s.entries.length) : r.submit1}</Button>
+        <span class="form__fine">{r.fine} <a href="/privacy">{t.form.privacy}</a></span>
       </div>
     </form>
   );

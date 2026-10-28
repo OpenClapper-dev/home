@@ -19,35 +19,7 @@
     </script>
   </head>
   <body>
-    <main class="page page--narrow">
-      <header class="top"><a class="top__brand" href="/"><img src="/icons/favicon.svg" alt="" width="24" height="24" /> OpenClapper</a><nav class="top__nav"><a href="/">Home</a></nav></header>
-      <article class="prose">
-        <h1>Privacy</h1>
-        <p class="lede">This page has no analytics, no advertising and no cookies. It stores only what you type into one of its two forms.</p>
-
-        <h2>Hosting</h2>
-        <p>openclapper.org runs on Cloudflare (Cloudflare, Inc.), which serves the page, stores the submissions in a database on its network and sends the one confirmation mail. Like every web server, Cloudflare processes your IP address and request metadata to deliver the page and to keep it reachable, and keeps these in its logs for a short time.</p>
-
-        <h2>The bot check</h2>
-        <p>Both forms carry Cloudflare Turnstile, which tells humans and bots apart without a puzzle. It runs in your browser and sends Cloudflare a few signals about the browser and the request, including your IP address. Nothing from the form itself goes into that check.</p>
-
-        <h2>The tester waiting list</h2>
-        <p>Required: your email address. Optional, if you give them: a first name or nickname, your positions in the industry and your years of experience.</p>
-        <p>The address is used to send you one confirmation mail right away and, later, an invitation to try the hosted version, plus the occasional mail about that test. It is not shared, sold or used for anything else. A sign-up that is not confirmed within seven days is deleted. A confirmed entry stays until you ask for it to be removed.</p>
-
-        <h2>Feature requests</h2>
-        <p>Required: the text of your request. Optional, if you give them: a title per request, your positions, your years of experience, whether you would like to test or help shape the feature, and how to contact you in your own words (an email address, a handle, or nothing at all). None of it is linked to an account, and nothing identifies you unless you put it in the text.</p>
-        <p>Requests are read by the project's maintainer and kept as long as they are useful for the roadmap. If you asked to be contacted, your contact note is used only for that.</p>
-
-        <h2>Your browser's storage</h2>
-        <p>The theme switch and an unsent form draft are kept in your browser's local storage, so a draft survives a closed tab. Neither leaves your browser; sending a form clears its draft.</p>
-
-        <h2>Your rights, and how to reach me</h2>
-        <p>You can ask at any time what is stored about you, have it corrected, or have it deleted: mail <a href="mailto:hello@openclapper.org">hello@openclapper.org</a>. Removal from the waiting list is immediate.</p>
-        <p class="meta">Responsible for this site: the maintainer of OpenClapper. Last updated 2026-10-28.</p>
-      </article>
-      <footer class="foot"><span>© 2026 OpenClapper · Apache 2.0</span><a href="https://github.com/OpenClapper-dev/core">GitHub</a><a href="/privacy">Privacy</a></footer>
-    </main>
-    <script type="module" src="/src/privacy.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/privacy.tsx"></script>
   </body>
 </html>

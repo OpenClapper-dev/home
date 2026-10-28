@@ -1,10 +1,11 @@
 /**
  * openclapper.org: what the project is, where it comes from, the three apps, the state of support,
- * the hosted version and why it is closed, then the two forms. The sections in the owner's voice are
- * marked (.voice); the rest speaks for the product.
+ * alpha, the maintainer, the hosted version, then the two forms. Every string comes from i18n.ts in the
+ * chosen language; the sections in the owner's voice are marked (.voice).
  */
 import { Button, IconButton, LinkButton, Modal, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
+import { useT } from "./i18n.ts";
 import { Requests } from "./Requests.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
@@ -20,8 +21,11 @@ function useConfirmed(): "yes" | "no" | null {
   return state;
 }
 
+const Voice = ({ p }: { p: string[] }) => <div class="prose voice">{p.map((s) => <p key={s}>{s}</p>)}</div>;
+
 export function Page() {
   const [theme, setTheme] = useTheme();
+  const [t, lang, setLang] = useT();
   const confirmed = useConfirmed();
   const [why, setWhy] = useState(false);
   return (
@@ -29,156 +33,126 @@ export function Page() {
       <header class="top">
         <a class="top__brand" href="/"><img src="/icons/favicon.svg" alt="" width="24" height="24" />OpenClapper</a>
         <nav class="top__nav" aria-label="Page">
-          <a class="top__link" href="#apps">The apps</a>
-          <a class="top__link" href="#support">Support</a>
-          <a class="top__link" href="#ideas">Ideas</a>
-          <a class="top__link" href="#waitlist">Waiting list</a>
+          <a class="top__link" href="#apps">{t.nav.apps}</a>
+          <a class="top__link" href="#support">{t.nav.support}</a>
+          <a class="top__link" href="#ideas">{t.nav.ideas}</a>
+          <a class="top__link" href="#waitlist">{t.nav.waitlist}</a>
           <a href={CORE} rel="noopener">GitHub</a>
+          <Button kind="ghost" size="sm" icon="translate" title={t.nav.langTitle} aria-label={t.nav.langTitle} lang={lang === "en" ? "de" : "en"} onClick={() => setLang(lang === "en" ? "de" : "en")}>{t.nav.lang}</Button>
           <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />
         </nav>
       </header>
 
       <section class="hero">
-        <span class="hero__status">Early alpha · self-hosted · open source</span>
-        <h1>Tooling for film prep and production, built by someone who did the job.</h1>
-        <p class="lede">OpenClapper organises a production from the first idea to the last shooting day, keeps the crew in sync, and runs on infrastructure you own. Open source under Apache 2.0.</p>
+        <span class="hero__status">{t.hero.status}</span>
+        <h1>{t.hero.title}</h1>
+        <p class="lede">{t.hero.lede}</p>
         <div class="hero__cta">
-          <LinkButton href="#waitlist" size="lg" icon="arrow-down">Join the tester waiting list</LinkButton>
-          <LinkButton href="#ideas" size="lg" kind="secondary">Send an idea</LinkButton>
-          <LinkButton href={CORE} size="lg" kind="ghost" icon="github" rel="noopener">Source</LinkButton>
+          <LinkButton href="#waitlist" size="lg" icon="arrow-down">{t.hero.join}</LinkButton>
+          <LinkButton href="#ideas" size="lg" kind="secondary">{t.hero.idea}</LinkButton>
+          <LinkButton href={CORE} size="lg" kind="ghost" icon="github" rel="noopener">{t.hero.source}</LinkButton>
         </div>
       </section>
 
       <section class="sec" id="origin">
-        <h2>Where it comes from</h2>
-        <p class="sec__sub">A production tool from the production office.</p>
-        <div class="prose voice">
-          <p>I worked as a 1. Aufnahmeleiter, roughly a 2nd AD in the American system, through prep and production on smaller independent projects. I know first-hand how poor the tooling is for organising a production and keeping everybody in sync: spreadsheets, group chats, PDFs that are outdated by the time they are printed.</p>
-          <p>I left the industry and became a full-time developer. The moment I started shooting my own hobby projects, the need for a tool to organise the shooting process came straight back. OpenClapper is my answer to it.</p>
-          <p>Rather than sink time and money into a niche tool only I use, I am committed to building a real open-source solution for organising prep and production.</p>
-        </div>
+        <h2>{t.origin.h}</h2>
+        <p class="sec__sub">{t.origin.sub}</p>
+        <Voice p={t.origin.p} />
       </section>
 
       <section class="sec" id="for">
-        <h2>Who it is for</h2>
-        <p class="sec__sub">Small crews first. Whole productions eventually. Your own infrastructure always.</p>
-        <div class="prose">
-          <p>The first users are small independent crews and solo filmmakers. The aim beyond that is to cover prep and production end to end, for larger productions too.</p>
-          <p>Anyone can self-host the whole ecosystem: a film school, a small production company, a one-person crew. Your data stays yours, and the running costs stay small.</p>
-          <p>There is no lock-in. An export of all your data from your own instance is planned, and if you ever want to move to or from another tool, I will do my best to help with the migration.</p>
-        </div>
+        <h2>{t.who.h}</h2>
+        <p class="sec__sub">{t.who.sub}</p>
+        <div class="prose">{t.who.p.map((s) => <p key={s}>{s}</p>)}</div>
       </section>
 
       <section class="sec" id="apps">
-        <h2>The ecosystem</h2>
-        <p class="sec__sub">Three apps, one system.</p>
-        <p class="prose">Features are deliberately not listed here: the project is in alpha, many of them are shaped by one cinematographer’s workflow, and they will change and merge as more people use it. A detailed list of supported workflows comes once OpenClapper leaves alpha.</p>
+        <h2>{t.apps.h}</h2>
+        <p class="sec__sub">{t.apps.sub}</p>
+        <p class="prose">{t.apps.note}</p>
         <div class="eco">
-          <div class="eco__head" aria-hidden="true"><span /><span>App</span><span>Platform</span><span>What it is</span></div>
-          <div class="eco__row">
-            <img class="eco__icon" src="/icons/studio.svg" alt="" width="96" height="96" />
-            <h3 class="eco__name">Studio</h3>
-            <span class="eco__platform">Web</span>
-            <p class="eco__desc">The main web application, where the work is done: organising and planning a production.</p>
-          </div>
-          <div class="eco__row">
-            <img class="eco__icon" src="/icons/phone.svg" alt="" width="96" height="96" />
-            <h3 class="eco__name">Mobile</h3>
-            <span class="eco__platform">Phone</span>
-            <p class="eco__desc">A lightweight companion that helps you stay on track, closely integrated with the Studio.</p>
-          </div>
-          <div class="eco__row">
-            <img class="eco__icon" src="/icons/admin.svg" alt="" width="96" height="96" />
-            <h3 class="eco__name">Admin</h3>
-            <span class="eco__platform">Web</span>
-            <p class="eco__desc">The operator’s side of an instance: user management and resource management for whoever runs OpenClapper for a school, a company or a crew.</p>
-          </div>
+          <div class="eco__head" aria-hidden="true"><span /><span>{t.apps.cols.app}</span><span>{t.apps.cols.platform}</span><span>{t.apps.cols.what}</span></div>
+          {([["studio", "Studio", t.apps.web, t.apps.studio], ["phone", "Mobile", t.apps.phone, t.apps.mobile], ["admin", "Admin", t.apps.web, t.apps.admin]] as const).map(([icon, name, platform, desc]) => (
+            <div class="eco__row" key={icon}>
+              <img class="eco__icon" src={`/icons/${icon}.svg`} alt="" width="96" height="96" />
+              <h3 class="eco__name">{name}</h3>
+              <span class="eco__platform">{platform}</span>
+              <p class="eco__desc">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       <section class="sec" id="support">
-        <h2>State of support</h2>
-        <p class="sec__sub">What runs where today.</p>
+        <h2>{t.support.h}</h2>
+        <p class="sec__sub">{t.support.sub}</p>
         <div class="apps">
           <article class="card">
-            <span class="card__tag">Studio and Admin</span>
-            <h3>Chrome and Chromium browsers</h3>
-            <p>Strongly recommended. Other browsers may work, but they are untested.</p>
+            <span class="card__tag">{t.support.browsersTag}</span>
+            <h3>{t.support.browsersH}</h3>
+            <p>{t.support.browsers}</p>
           </article>
           <article class="card">
-            <span class="card__tag">Mobile</span>
-            <h3>Android</h3>
-            <p>An iOS app is planned. The ecosystem is meant to stay cross-platform.</p>
-            <span class="pill pill--soon">iOS planned</span>
+            <span class="card__tag">{t.support.mobileTag}</span>
+            <h3>{t.support.mobileH}</h3>
+            <p>{t.support.mobile}</p>
+            <span class="pill pill--soon">{t.support.ios}</span>
           </article>
           <article class="card">
-            <span class="card__tag">Self-hosting</span>
-            <h3>Cloudflare and GitHub</h3>
-            <p>A deployment runs on a Cloudflare account and is managed from a GitHub repository.</p>
-            <div><Button kind="secondary" size="sm" onClick={() => setWhy(true)}>Why these services?</Button></div>
+            <span class="card__tag">{t.support.hostTag}</span>
+            <h3>{t.support.hostH}</h3>
+            <p>{t.support.host}</p>
+            <div><Button kind="secondary" size="sm" onClick={() => setWhy(true)}>{t.support.why}</Button></div>
           </article>
         </div>
-        <Modal open={why} onClose={() => setWhy(false)} title="Why Cloudflare and GitHub?">
-          <p>Self-hosting should cost a small company, a film school or an independent crew nothing to start, and as little as possible to run. Both services make that true today.</p>
+        <Modal open={why} onClose={() => setWhy(false)} title={t.support.whyTitle}>
+          <p>{t.support.whyIntro}</p>
           <h3>GitHub</h3>
-          <p>A very generous free tier for managing a deployment: a self-hoster does not pay for it. And it is the de-facto standard of the open-source community, where OpenClapper lives anyway.</p>
+          <p>{t.support.github}</p>
           <h3>Cloudflare</h3>
-          <p>The most comprehensive set of cloud services for what OpenClapper needs, in one account: compute, a database, file storage, mail, access control. The free tier covers compute, so starting costs nothing.</p>
-          <p>File storage is where a production tool spends its money, and Cloudflare’s pricing for it is by far the cheapest among the cloud providers. Zero Trust adds tight access policies for the admin side at no extra cost.</p>
-          <h3>Both</h3>
-          <p>Both have very strong support in LLM coding agents, which makes setting up a self-hosted instance comparatively easy, even without a developer on the team.</p>
+          <p>{t.support.cloudflare1}</p>
+          <p>{t.support.cloudflare2}</p>
+          <h3>{t.support.bothH}</h3>
+          <p>{t.support.both}</p>
         </Modal>
       </section>
 
       <section class="sec" id="alpha">
-        <h2>What alpha means</h2>
-        <p class="sec__sub">Early prototyping, in daily use, not ready for professional workflows.</p>
-        <div class="prose voice">
-          <p>OpenClapper is in alpha: an early prototyping stage. Many features exist already and I use the app a lot for my own projects. As it stands, though, it is not a good experience for more professional workflows.</p>
-          <p>My aim for alpha is to establish a baseline of supported features, drawn from the community’s requests. At some point I will freeze that list, build it out, and roll it out for testing.</p>
-          <p>During alpha there is no guarantee of backwards compatibility. If you self-host now and move along with the updates, chances are that big things break at some point. That is the unfortunate reality of an alpha. From the beta release on, backwards compatibility is guaranteed.</p>
-        </div>
+        <h2>{t.alpha.h}</h2>
+        <p class="sec__sub">{t.alpha.sub}</p>
+        <Voice p={t.alpha.p} />
       </section>
 
       <section class="sec" id="maintainer">
-        <h2>One maintainer</h2>
-        <p class="sec__sub">A note on timeframes.</p>
-        <div class="prose voice">
-          <p>I am one person, with a full-time job. Please be realistic about how long it will take to get this project going.</p>
-          <p>AI is accelerating the speed at which I can deliver features dramatically. Testing and prototyping become all the more important for it, and that cannot be automated away. Which is where you come in.</p>
-        </div>
+        <h2>{t.maintainer.h}</h2>
+        <p class="sec__sub">{t.maintainer.sub}</p>
+        <Voice p={t.maintainer.p} />
       </section>
 
       <section class="sec" id="hosted">
-        <h2>The hosted version</h2>
-        <p class="sec__sub">There is one. It is closed for now.</p>
-        <div class="prose voice">
-          <p>I run a hosted OpenClapper for myself, and I am opening it to selected testers only. The reason is cost, plainly: compute at this scale is cheap, but file storage in the cloud is not, and OpenClapper relies on files of all kinds to keep you inside the ecosystem.</p>
-          <p>I do not rule out a version everyone can use without self-hosting; quite the opposite, I aim for it. But until I can estimate what running it costs at scale, the hosted version stays closed. If you want to help find out, join the waiting list below.</p>
-        </div>
+        <h2>{t.hosted.h}</h2>
+        <p class="sec__sub">{t.hosted.sub}</p>
+        <Voice p={t.hosted.p} />
       </section>
 
       <section class="sec" id="ideas">
-        <h2>Contribute</h2>
-        <p class="sec__sub">Send ideas. Any department, any problem.</p>
-        <div class="prose voice">
-          <p>In the age of AI, most features I can implement myself. What I cannot conjure is your hands-on experience. I am hugely thankful to anyone who takes the time to write down what gets in their way on a shoot.</p>
-          <p>It does not have to be well written. Brainstorms, half-thoughts, a list of annoyances: anything goes. I sort it out, with AI's help, and make sense of it. If you would like to test the feature once it exists, or be asked questions while it is taking shape, say so and tell me how to reach you, in whatever way you are comfortable with.</p>
-        </div>
+        <h2>{t.ideas.h}</h2>
+        <p class="sec__sub">{t.ideas.sub}</p>
+        <Voice p={[...t.ideas.p, t.ideas.language]} />
         <Requests />
       </section>
 
       <section class="sec" id="waitlist">
-        <h2>Tester waiting list</h2>
-        <p class="sec__sub">A way to help the project: test the hosted version as it grows.</p>
-        <p class="prose">Testers get access to the hosted version and try new features before they are frozen. Leave your email and I will get in touch when a test round starts. Everything else is optional; it helps me put together a varied group.</p>
+        <h2>{t.waitlist.h}</h2>
+        <p class="sec__sub">{t.waitlist.sub}</p>
+        <p class="prose">{t.waitlist.p}</p>
         <Waitlist confirmed={confirmed} />
       </section>
 
       <footer class="foot">
-        <span>© 2026 OpenClapper · Apache 2.0</span>
+        <span>{t.foot.license}</span>
         <a href={CORE} rel="noopener">GitHub</a>
-        <a href="/privacy">Privacy</a>
+        <a href="/privacy">{t.foot.privacy}</a>
         <span class="num">v{__HOME_VERSION__} ({__HOME_COMMIT__})</span>
       </footer>
     </main>

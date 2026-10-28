@@ -1,12 +1,13 @@
 /**
- * The optional "about you" block both forms share, folded behind one button: positions (many), what
- * "other" means, years in the industry. The position list itself opens on demand too; the picked ones
- * always show.
+ * The optional "about you" block both forms share, folded behind one button: the film system,
+ * positions (many), what "other" means, years in the industry. The position list itself opens on
+ * demand too; the picked ones always show.
  */
-import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, positionById, searchPositions, SYSTEM_LABEL, SYSTEMS, type FilmSystem } from "@openclapper/home-vocab";
+import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, positionById, searchPositions, SYSTEMS, type FilmSystem } from "@openclapper/home-vocab";
 import { Button, Chip, Field, Icon, Input } from "@openclapper/home-ui";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
+import { useT } from "./i18n.ts";
 
 export interface PersonState { system: FilmSystem | ""; positions: string[]; other_position: string; years: string }
 export const emptyPerson = (): PersonState => ({ system: "", positions: [], other_position: "", years: "" });
@@ -27,6 +28,8 @@ export function Disclose({ label, open: forced, children }: { label: string; ope
 }
 
 export function PersonFields({ value, onChange, errors }: { value: PersonState; onChange: (p: PersonState) => void; errors: Record<string, string> }) {
+  const [t] = useT();
+  const f = t.form;
   const [q, setQ] = useState("");
   const [listOpen, setListOpen] = useState(false);
   const toggle = (id: string) => onChange({ ...value, positions: value.positions.includes(id) ? value.positions.filter((p) => p !== id) : [...value.positions, id] });
@@ -35,25 +38,25 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
   const showList = listOpen || q.length > 0;
   return (
     <>
-      <Field label="Which system did you work in?" help="Titles and habits differ; it helps me read your positions right. Click again to clear." error={errors.system}>
+      <Field label={f.system} help={f.systemHelp} error={errors.system} optional={f.optional}>
         {(id) => (
-          <div class="f-seg" role="radiogroup" id={id} aria-label="Film system">
-            {SYSTEMS.map((s) => <button type="button" class="f-seg__opt" role="radio" aria-checked={value.system === s} key={s} onClick={() => onChange({ ...value, system: value.system === s ? "" : s })}>{SYSTEM_LABEL[s]}</button>)}
+          <div class="f-seg" role="radiogroup" id={id} aria-label={f.systemAria}>
+            {SYSTEMS.map((s) => <button type="button" class="f-seg__opt" role="radio" aria-checked={value.system === s} key={s} onClick={() => onChange({ ...value, system: value.system === s ? "" : s })}>{f.systems[s]}</button>)}
           </div>
         )}
       </Field>
-      <Field label="Your positions" help="Every role you have worked in; many people have more than one." error={errors.positions}>
+      <Field label={f.positions} help={f.positionsHelp} error={errors.positions} optional={f.optional}>
         {(id, invalid) => (
           <div class="positions">
             <div class="positions__picked">
-              {value.positions.map((p) => <Chip key={p} selected onClick={() => toggle(p)} aria-label={`Remove ${positionById(p)?.label ?? p}`}>{positionById(p)?.label ?? p}<Icon name="close" /></Chip>)}
-              <Button kind="secondary" size="sm" icon={showList ? "minus" : "plus"} aria-expanded={showList} onClick={() => { setListOpen(!showList); setQ(""); }}>{showList ? "Close the list" : value.positions.length ? "Add a position" : "Pick positions"}</Button>
+              {value.positions.map((p) => <Chip key={p} selected onClick={() => toggle(p)} aria-label={f.remove(positionById(p)?.label ?? p)}>{positionById(p)?.label ?? p}<Icon name="close" /></Chip>)}
+              <Button kind="secondary" size="sm" icon={showList ? "minus" : "plus"} aria-expanded={showList} onClick={() => { setListOpen(!showList); setQ(""); }}>{showList ? f.closeList : value.positions.length ? f.add : f.pick}</Button>
             </div>
             {showList && (
               <>
-                <Input id={id} invalid={invalid} type="search" placeholder="Filter: DP, Gaffer, Aufnahmeleitung…" value={q} onInput={(e) => setQ(e.currentTarget.value)} aria-label="Filter positions" />
-                <div class="positions__list" role="group" aria-label="Positions by department">
-                  {grouped.length === 0 && <span class="meta">No position matches "{q}". Pick "Other" and write it in.</span>}
+                <Input id={id} invalid={invalid} type="search" placeholder={f.filter} value={q} onInput={(e) => setQ(e.currentTarget.value)} aria-label={f.filterAria} />
+                <div class="positions__list" role="group" aria-label={f.byDept}>
+                  {grouped.length === 0 && <span class="meta">{f.noMatch(q)}</span>}
                   {grouped.map(({ d, items }) => (
                     <div class="positions__group" key={d}>
                       <span class="positions__dept">{DEPARTMENT_LABEL[d]}</span>
@@ -68,11 +71,11 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
       </Field>
       <div class="form__row">
         {value.positions.includes("other") && (
-          <Field label="What is “other”?" error={errors.other_position}>
-            {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.otherPosition} value={value.other_position} onInput={(e) => onChange({ ...value, other_position: e.currentTarget.value })} placeholder="Drone pilot, intimacy coordinator…" />}
+          <Field label={f.other} error={errors.other_position} optional={f.optional}>
+            {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.otherPosition} value={value.other_position} onInput={(e) => onChange({ ...value, other_position: e.currentTarget.value })} placeholder={f.otherPh} />}
           </Field>
         )}
-        <Field label="Years in the industry" help="Altogether, across every position." error={errors.years}>
+        <Field label={f.years} help={f.yearsHelp} error={errors.years} optional={f.optional}>
           {(id, invalid) => <Input id={id} invalid={invalid} type="number" inputMode="numeric" min={0} max={LIMITS.years} step={1} value={value.years} onInput={(e) => onChange({ ...value, years: e.currentTarget.value })} style={{ maxWidth: 140 }} />}
         </Field>
       </div>
