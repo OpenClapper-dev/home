@@ -129,6 +129,25 @@ export function Page() {
         </Modal>
       </section>
 
+      <section class="sec" id="alpha">
+        <h2>What alpha means</h2>
+        <p class="sec__sub">Early prototyping, in daily use, not ready for professional workflows.</p>
+        <div class="prose voice">
+          <p>OpenClapper is in alpha: an early prototyping stage. Many features exist already and I use the app a lot for my own projects. As it stands, though, it is not a good experience for more professional workflows.</p>
+          <p>My aim for alpha is to establish a baseline of supported features, drawn from the community’s requests. At some point I will freeze that list, build it out, and roll it out for testing.</p>
+          <p>During alpha there is no guarantee of backwards compatibility. If you self-host now and move along with the updates, chances are that big things break at some point. That is the unfortunate reality of an alpha. From the beta release on, backwards compatibility is guaranteed.</p>
+        </div>
+      </section>
+
+      <section class="sec" id="maintainer">
+        <h2>One maintainer</h2>
+        <p class="sec__sub">A note on timeframes.</p>
+        <div class="prose voice">
+          <p>I am one person, with a full-time job. Please be realistic about how long it will take to get this project going.</p>
+          <p>AI is accelerating the speed at which I can deliver features dramatically. Testing and prototyping become all the more important for it, and that cannot be automated away. Which is where you come in.</p>
+        </div>
+      </section>
+
       <section class="sec" id="hosted">
         <h2>The hosted version</h2>
         <p class="sec__sub">There is one. It is closed for now.</p>
