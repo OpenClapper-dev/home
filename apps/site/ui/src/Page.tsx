@@ -170,8 +170,8 @@ export function Page() {
 
       <section class="sec" id="waitlist">
         <h2>Tester waiting list</h2>
-        <p class="sec__sub">Try the hosted version before anyone else.</p>
-        <p class="prose">Leave your email and I will invite you when there is a spot. Everything else is optional; it helps me pick a varied group of testers.</p>
+        <p class="sec__sub">A way to help the project: test the hosted version as it grows.</p>
+        <p class="prose">Testers get access to the hosted version and try new features before they are frozen. Leave your email and I will get in touch when a test round starts. Everything else is optional; it helps me put together a varied group.</p>
         <Waitlist confirmed={confirmed} />
       </section>
 
