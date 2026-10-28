@@ -28,8 +28,7 @@ The admin view marks confirmed rows as invited and exports the confirmed ones as
 ## Feature requests
 
 One submission carries one or many **entries**: optional title, required text, and per entry "I would
-test this" and "contact me while shaping this". With more than one entry, a pair of global checkboxes
-sets all entries at once; when entries differ, the global one shows mixed. Then once per submission:
+test this" and "contact me while shaping this". Then once per submission:
 about you, and **how to reach you** as free text (an email, a handle, nothing; never required).
 
 Stored as one `requests` row and one `request_entries` row per entry, in order. The admin view shows

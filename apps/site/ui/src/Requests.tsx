@@ -1,7 +1,6 @@
 /**
  * Feature requests: one or many per submission, each with an optional title, the text, and whether
- * the person would test or help shape it. A pair of global toggles sets every entry; once entries
- * differ, the global one shows mixed. The person block and the contact come once.
+ * the person would test or help shape it, set per entry. The person block and the contact come once.
  */
 import { LIMITS } from "@openclapper/home-vocab";
 import { Banner, Button, Check, Field, IconButton, Input, Textarea } from "@openclapper/home-ui";
@@ -25,7 +24,7 @@ export function Requests() {
   const ts = useTurnstile("request");
 
   const patch = (i: number, p: Partial<Entry>) => set({ ...s, entries: s.entries.map((e, j) => (j === i ? { ...e, ...p } : e)) });
-  const all = (flag: "test" | "prototype") => ({ on: s.entries.every((e) => e[flag]), mixed: s.entries.some((e) => e[flag]) && !s.entries.every((e) => e[flag]) });
+| "prototype") => ({ on: s.entries.every((e) => e[flag]), mixed: s.entries.some((e) => e[flag]) && !s.entries.every((e) => e[flag]) });
   const setAll = (flag: "test" | "prototype", v: boolean) => set({ ...s, entries: s.entries.map((e) => ({ ...e, [flag]: v })) });
   const wantsContact = s.entries.some((e) => e.test || e.prototype);
 
@@ -59,13 +58,6 @@ export function Requests() {
   return (
     <form class="form" onSubmit={submit} noValidate>
       {draft.restored && <div class="form__draft">Your unsent draft was restored. <button type="button" class="f-linkbtn" onClick={draft.discard}>Start over</button></div>}
-      {s.entries.length > 1 && (
-        <div class="flags">
-          <span class="flags__label">For all {s.entries.length} requests at once (or set each one below):</span>
-          <Check checked={all("test").on} indeterminate={all("test").mixed} onChange={(v) => setAll("test", v)}>I would test these</Check>
-          <Check checked={all("prototype").on} indeterminate={all("prototype").mixed} onChange={(v) => setAll("prototype", v)}>Contact me while shaping these</Check>
-        </div>
-      )}
       {s.entries.map((en, i) => (
         <div class="entry" key={i}>
           <div class="entry__head">
