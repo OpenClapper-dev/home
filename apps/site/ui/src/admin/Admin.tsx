@@ -3,7 +3,7 @@ import { DEPARTMENT_LABEL, departmentsOf, positionById, SYSTEM_LABEL, type FilmS
 import { Banner, Button, IconButton, Spinner, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
 
-interface Wait { id: string; email: string; nickname: string | null; system: FilmSystem | null; positions: string[]; other_position: string |const who = (p: { system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null }) => {| null; created_at: string; confirmed_at: string | null; invited_at: string | null }
+interface Wait { id: string; email: string; nickname: string | null; system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
 interface Entry { id: string; title: string | null; text: string; test: boolean; prototype: boolean }
 interface Req { id: string; created_at: string; system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null; contact: string | null; status: "new" | "seen" | "done"; entries: Entry[] }
 
@@ -18,7 +18,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 const send = (method: string, path: string, body?: unknown) => api<unknown>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "");
-const who = (p: { positions: string[]; other_position: string | null; years: number | null }) => {
+const who = (p: { system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null }) => {
   const parts = p.positions.map((id) => (id === "other" && p.other_position ? `Other: ${p.other_position}` : positionById(id)?.label ?? id));
   const depts = departmentsOf(p.positions).map((d) => DEPARTMENT_LABEL[d]);
   return [p.system ? SYSTEM_LABEL[p.system] : "", parts.join(", "), depts.length ? `(${depts.join(", ")})` : "", p.years !== null ? `${p.years} yrs` : ""].filter(Boolean).join(" · ") || "no details";
