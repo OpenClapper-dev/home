@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "oxc", "unicorn"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    // Off, as in core: dependency lists are deliberately partial (mount-only effects, stable callbacks).
+    "react/exhaustive-deps": "off",
+    // Off: React Compiler rules; this app does not use the compiler.
+    "react/immutability": "off",
+    "react/refs": "off",
+    "react/set-state-in-effect": "off",
+    "react/purity": "off",
+    "react/use-memo": "off",
+    // Off: false positive on a helper whose method is a parameter (body is undefined on GET).
+    "unicorn/no-invalid-fetch-options": "off"
+  },
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/.wrangler/**", "**/worker-configuration.d.ts"]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  // openclapper.org: the page, the two forms' API and the owner's admin view, one Worker. Local
+  // development; a deployment gets wrangler.deploy.jsonc with its own settings (scripts/deploy-config.mjs,
+  // docs/deploying.md). Never put an account, database or Access id in here.
+  "name": "openclapper-home",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-13",
+  "observability": { "enabled": true },
+  // No preview URLs: they would serve unreviewed versions with the production bindings.
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // The forms' API, the confirmation link, and everything under /admin (verified before an asset is served).
+    "run_worker_first": ["/api/*", "/admin", "/admin/*"]
+  },
+  "vars": {
+    // The Zero Trust team domain and the admin Access application's AUD (not secrets: both are in the
+    // login redirect). Set per deployment; empty, /admin refuses every request (locally: ADMIN_DEV_BYPASS).
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": "",
+    // Where the confirmation link points and who the confirmation mail is from.
+    "SITE_URL": "http://localhost:5180",
+    "MAIL_FROM": "OpenClapper <noreply@openclapper.org>"
+  },
+  // Transactional mail (the waiting list's confirmation): Cloudflare Email Service. `wrangler dev`
+  // simulates it (the mail is logged, not sent); the sender domain must be onboarded on the account.
+  "send_email": [{ "name": "EMAIL" }],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "openclapper-home", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ]
+}

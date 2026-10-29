@@ -1,0 +1,64 @@
+/** The tester waiting list: an email, the rest optional; double opt-in through the confirmation mail. */
+import { LIMITS } from "@openclapper/home-vocab";
+import { Banner, Button, Field, Input } from "@openclapper/home-ui";
+import { useState } from "preact/hooks";
+import { ApiError, post } from "./api.ts";
+import { useDraft } from "./drafts.ts";
+import { useT } from "./i18n.ts";
+import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
+import { useTurnstile } from "./turnstile.ts";
+
+interface State { email: string; nickname: string; person: PersonState }
+const empty = (): State => ({ email: "", nickname: "", person: emptyPerson() });
+const isEmpty = (s: State) => !s.email && !s.nickname && personIsEmpty(s.person);
+
+export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
+  const [t] = useT();
+  const [s, set, draft] = useDraft<State>("draft:waitlist", empty, isEmpty);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<string | null>(null);
+  const ts = useTurnstile("waitlist");
+
+  const submit = async (e: Event) => {
+    e.preventDefault();
+    if (!ts.token) { setErrors({ turnstile: t.form.botWait }); return; }
+    setBusy(true);
+    setErrors({});
+    try {
+      await post("/api/waitlist", { email: s.email, nickname: s.nickname || null, ...personBody(s.person), turnstile: ts.token });
+      setDone(s.email);
+      draft.discard();
+    } catch (err) {
+      const a = err as ApiError;
+      setErrors({ [a.field ?? "form"]: a.message });
+    } finally {
+      setBusy(false);
+      ts.reset();
+    }
+  };
+
+  if (done) return <Banner kind="ok" title={t.wl.doneTitle} role="status">{t.wl.done(done)}</Banner>;
+  return (
+    <form class="form" onSubmit={submit} noValidate>
+      {confirmed === "yes" && <Banner kind="ok" title={t.wl.confirmedTitle} role="status">{t.wl.confirmed}</Banner>}
+      {confirmed === "no" && <Banner kind="warn" title={t.wl.expiredTitle} role="alert">{t.wl.expired}</Banner>}
+      {draft.restored && <div class="form__draft">{t.form.draftRestored} <button type="button" class="f-linkbtn" onClick={draft.discard}>{t.form.startOver}</button></div>}
+      <Field label={t.wl.email} required help={t.wl.emailHelp} error={errors.email}>
+        {(id, invalid) => <Input id={id} invalid={invalid} type="email" autoComplete="email" required maxLength={LIMITS.email} value={s.email} onInput={(e) => set({ ...s, email: e.currentTarget.value })} />}
+      </Field>
+      <Disclose label={t.form.more} open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.system || errors.positions || errors.years || errors.other_position)}>
+        <Field label={t.wl.nickname} error={errors.nickname} optional={t.form.optional}>
+          {(id, invalid) => <Input id={id} invalid={invalid} autoComplete="given-name" maxLength={LIMITS.nickname} value={s.nickname} onInput={(e) => set({ ...s, nickname: e.currentTarget.value })} />}
+        </Field>
+        <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
+      </Disclose>
+      <div class="turnstile" ref={ts.ref} />
+      {(errors.turnstile || errors.form || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.turnstile ?? t.form.botFailed} role="alert">{ts.failed && !errors.form ? t.form.reload : undefined}</Banner>}
+      <div class="form__actions">
+        <Button type="submit" size="lg" loading={busy}>{t.wl.submit}</Button>
+        <span class="form__fine">{t.wl.fine} <a href="/privacy">{t.form.privacy}</a></span>
+      </div>
+    </form>
+  );
+}
