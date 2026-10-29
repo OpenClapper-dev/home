@@ -3,17 +3,28 @@
  * positions (many), what "other" means, years in the industry. The position list itself opens on
  * demand too; the picked ones always show.
  */
-import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, positionById, searchPositions, SYSTEMS, type FilmSystem } from "@openclapper/home-vocab";
+import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, PLATFORM_LABEL, PLATFORMS, positionById, searchPositions, SYSTEMS, type FilmSystem, type Platform } from "@openclapper/home-vocab";
 import { Button, Chip, Field, Icon, Input } from "@openclapper/home-ui";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
-import { useT } from "./i18n.ts";
+import { t } from "./copy.ts";
 
 export interface PersonState { system: FilmSystem | ""; positions: string[]; other_position: string; years: string }
 export const emptyPerson = (): PersonState => ({ system: "", positions: [], other_position: "", years: "" });
 export const personIsEmpty = (p: PersonState) => !p.system && p.positions.length === 0 && !p.other_position && !p.years;
 /** What the API takes (packages/vocab parses it strictly). */
 export const personBody = (p: PersonState) => ({ system: p.system || null, positions: p.positions, other_position: p.other_position || null, years: p.years === "" ? null : Number(p.years) });
+
+/** Which platforms the person could test on: chips, many; required where the form says so. */
+export function Platforms({ value, onChange, required, error }: { value: Platform[]; onChange: (v: Platform[]) => void; required?: boolean; error?: string }) {
+  const f = t.form;
+  const toggle = (p: Platform) => onChange(value.includes(p) ? value.filter((x) => x !== p) : [...value, p]);
+  return (
+    <Field label={f.platforms} help={f.platformsHelp} required={required} error={error} optional={f.optional}>
+      {(id) => <div class="f-chips" id={id} role="group" aria-label={f.platformsAria}>{PLATFORMS.map((p) => <Chip key={p} selected={value.includes(p)} onClick={() => toggle(p)}>{PLATFORM_LABEL[p]}</Chip>)}</div>}
+    </Field>
+  );
+}
 
 /** A block that opens on a click and stays open once it holds something (a restored draft, an error). */
 export function Disclose({ label, open: forced, children }: { label: string; open?: boolean; children: ComponentChildren }) {
@@ -28,7 +39,6 @@ export function Disclose({ label, open: forced, children }: { label: string; ope
 }
 
 export function PersonFields({ value, onChange, errors }: { value: PersonState; onChange: (p: PersonState) => void; errors: Record<string, string> }) {
-  const [t] = useT();
   const f = t.form;
   const [q, setQ] = useState("");
   const [listOpen, setListOpen] = useState(false);

@@ -45,9 +45,20 @@ export interface Person {
   years: number | null;
 }
 
+/** Where the apps run; what a tester can test on. */
+export const PLATFORMS = ["web", "android", "ios"] as const;
+export type Platform = (typeof PLATFORMS)[number];
+export const PLATFORM_LABEL: Record<Platform, string> = { web: "Web (Studio, Admin)", android: "Android", ios: "iOS (once it exists)" };
+
 export interface WaitlistSubmission extends Person {
   email: string;
   nickname: string | null;
+  /** Wants to be picked as an alpha tester (roadmap step 5). */
+  tester: boolean;
+  /** Wants the Call Sheet: a mail when the roadmap moves a step. */
+  updates: boolean;
+  /** Platforms the person can test on; required, non-empty, when tester. */
+  platforms: Platform[];
 }
 
 export interface RequestEntry {
@@ -61,8 +72,10 @@ export interface RequestEntry {
 
 export interface RequestSubmission extends Person {
   entries: RequestEntry[];
-  /** How to reach the person, in their words (an email, a handle, nothing); null when not given. */
+  /** How to reach the person, in their words (an email, a handle); required once an entry asks to test or to be contacted. */
   contact: string | null;
+  /** Platforms the person could test on; required once an entry asks to test. */
+  platforms: Platform[];
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -75,6 +88,18 @@ function optionalText(v: unknown, field: string, max: number): string | null {
   if (!t) return null;
   if (t.length > max) throw new SubmissionError(field, `${field} is longer than ${max} characters`);
   return t;
+}
+
+/** A list of platform ids, deduplicated; absent or null is empty. */
+function platforms(v: unknown): Platform[] {
+  const raw = v === undefined || v === null ? [] : v;
+  if (!Array.isArray(raw)) throw new SubmissionError("platforms", "platforms must be a list");
+  const out: Platform[] = [];
+  for (const p of raw) {
+    if (!(PLATFORMS as readonly string[]).includes(p as string)) throw new SubmissionError("platforms", "unknown platform");
+    if (!out.includes(p as Platform)) out.push(p as Platform);
+  }
+  return out;
 }
 
 function person(b: Record<string, unknown>): Person {
@@ -107,7 +132,13 @@ export function parseWaitlist(v: unknown): WaitlistSubmission {
   const email = v.email.trim();
   if (!email) throw new SubmissionError("email", "email is required");
   if (email.length > LIMITS.email || !EMAIL.test(email)) throw new SubmissionError("email", "this does not look like an email address");
-  return { email, nickname: optionalText(v.nickname, "nickname", LIMITS.nickname), ...person(v) };
+  // Tester is the default: the form is the tester waiting list; the Call Sheet is the add-on, or the only pick.
+  const tester = v.tester !== false;
+  const updates = v.updates === true;
+  if (!tester && !updates) throw new SubmissionError("tester", "pick the waiting list, the Call Sheet, or both");
+  const ps = platforms(v.platforms);
+  if (tester && ps.length === 0) throw new SubmissionError("platforms", "pick at least one platform you could test on");
+  return { email, nickname: optionalText(v.nickname, "nickname", LIMITS.nickname), tester, updates, platforms: ps, ...person(v) };
 }
 
 export function parseRequest(v: unknown): RequestSubmission {
@@ -122,5 +153,9 @@ export function parseRequest(v: unknown): RequestSubmission {
     if (text.length > LIMITS.text) throw new SubmissionError(`${f}.text`, `longer than ${LIMITS.text} characters`);
     return { title: optionalText(e.title, `${f}.title`, LIMITS.title), text, test: e.test === true, prototype: e.prototype === true };
   });
-  return { entries, contact: optionalText(v.contact, "contact", LIMITS.contact), ...person(v) };
+  const contact = optionalText(v.contact, "contact", LIMITS.contact);
+  const ps = platforms(v.platforms);
+  if (entries.some((e) => e.test || e.prototype) && !contact) throw new SubmissionError("contact", "say how to reach you, since you asked to test or to be contacted");
+  if (entries.some((e) => e.test) && ps.length === 0) throw new SubmissionError("platforms", "pick at least one platform you could test on");
+  return { entries, contact, platforms: ps, ...person(v) };
 }

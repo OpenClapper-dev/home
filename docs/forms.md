@@ -10,9 +10,11 @@ Optional in both: the **film system** worked in (German, US / International, Oth
 with a filter that also hits the German titles; "Other" opens a free text), and **years in the industry**
 (one number, across every position). Departments are derived from the positions, never asked.
 
-## Tester waiting list
+## Sign-up: the tester waiting list and the Call Sheet
 
-Fields: **email** (required), first name or nickname, about you.
+One form, one table (`waitlist`). Fields: **email** (required); **what for** (`tester`, the default, and/or
+`updates`, the Call Sheet: a mail whenever the roadmap moves a step; at least one); for testers the
+**platforms** they could test on (`web`, `android`, `ios`; at least one); first name or nickname; about you.
 
 Double opt-in: the Worker stores the row unconfirmed with a 48-hex token and sends the confirmation
 link (`/api/waitlist/confirm/<token>`) through Cloudflare Email Service. The link confirms once, clears
@@ -28,8 +30,9 @@ The admin view marks confirmed rows as invited and exports the confirmed ones as
 ## Feature requests
 
 One submission carries one or many **entries**: optional title, required text, and per entry "I would
-test this" and "contact me while shaping this". Then once per submission:
-about you, and **how to reach you** as free text (an email, a handle, nothing; never required).
+test this once it exists" and "ask me questions while it takes shape". Then once per submission: **how
+to reach you** as free text (an email, a handle; required once an entry asks to test or to be contacted),
+**platforms** (required once an entry asks to test), and about you.
 
 Stored as one `requests` row and one `request_entries` row per entry, in order. The admin view shows
 them per submission with a status (new / seen / done).
@@ -49,10 +52,8 @@ siteverify, checks the action and that the hostname is the site's own (`SITE_URL
 itself: the page resets the widget after every submission. Locally and in CI the page uses Cloudflare's
 visible test site key and `.dev.vars` the matching test secret, which always pass.
 
-## Languages
+## Language
 
-The page, both forms and the privacy page exist in English and German (`apps/site/ui/src/i18n.ts`:
-`en` is the source of the keys, `de` must carry every one). The choice is guessed from the browser on
-the first visit, kept in localStorage (`lang`), switched by the button in the header and mirrored on
-`<html lang>`. Position and department labels stay English in both languages (the shared vocabulary;
-the filter also hits the German titles). Error messages from the Worker are English. The admin view is English.
+Everything is English (`apps/site/ui/src/copy.ts` holds every string of the page, the forms and the
+privacy page); there is no localisation. The request form says that requests may be written in German.
+Position and department labels are English; the filter also hits the German titles.

@@ -1,14 +1,13 @@
 import { render } from "preact";
 import "@openclapper/home-ui";
 import "./site.css";
-import { useT } from "./i18n.ts";
+import { t } from "./copy.ts";
 import { CORE, Top } from "./Page.tsx";
 
 const CONTACT = "hello@openclapper.org";
 
 /** The privacy page, in the chosen language, with the same bar as the page. */
 function Privacy() {
-  const [t] = useT();
   const p = t.privacy;
   document.title = `${p.title} · OpenClapper`;
   return (

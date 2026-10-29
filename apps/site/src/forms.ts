@@ -54,15 +54,16 @@ export function registerForms(router: Router<Ctx>) {
 
     const t = token();
     const positions = JSON.stringify(w.positions);
+    const platforms = JSON.stringify(w.platforms);
     if (existing) {
-      await env.DB.prepare("UPDATE waitlist SET nickname = ?2, positions = ?3, other_position = ?4, years = ?5, token = ?6, token_sent_at = ?7, system = ?8 WHERE id = ?1")
-        .bind(existing.id, w.nickname, positions, w.other_position, w.years, t, now.toISOString(), w.system).run();
+      await env.DB.prepare("UPDATE waitlist SET nickname = ?2, positions = ?3, other_position = ?4, years = ?5, token = ?6, token_sent_at = ?7, system = ?8, tester = ?9, updates = ?10, platforms = ?11 WHERE id = ?1")
+        .bind(existing.id, w.nickname, positions, w.other_position, w.years, t, now.toISOString(), w.system, w.tester ? 1 : 0, w.updates ? 1 : 0, platforms).run();
     } else {
-      await env.DB.prepare("INSERT INTO waitlist (id, email, nickname, positions, other_position, years, created_at, token, token_sent_at, system) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?7, ?9)")
-        .bind(crypto.randomUUID(), w.email, w.nickname, positions, w.other_position, w.years, now.toISOString(), t, w.system).run();
+      await env.DB.prepare("INSERT INTO waitlist (id, email, nickname, positions, other_position, years, created_at, token, token_sent_at, system, tester, updates, platforms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?7, ?9, ?10, ?11, ?12)")
+        .bind(crypto.randomUUID(), w.email, w.nickname, positions, w.other_position, w.years, now.toISOString(), t, w.system, w.tester ? 1 : 0, w.updates ? 1 : 0, platforms).run();
     }
     try {
-      await sendConfirmation(env.EMAIL, env, w.email, t);
+      await sendConfirmation(env.EMAIL, env, w.email, t, w);
     } catch (err) {
       // The row stays (unconfirmed, resendable); the person is told to try again.
       console.error("confirmation mail failed", err);
@@ -89,8 +90,8 @@ export function registerForms(router: Router<Ctx>) {
     await guard(ctx, body, "request");
     const id = crypto.randomUUID();
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO requests (id, created_at, positions, other_position, years, contact, system) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
-        .bind(id, new Date().toISOString(), JSON.stringify(r.positions), r.other_position, r.years, r.contact, r.system),
+      env.DB.prepare("INSERT INTO requests (id, created_at, positions, other_position, years, contact, system, platforms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
+        .bind(id, new Date().toISOString(), JSON.stringify(r.positions), r.other_position, r.years, r.contact, r.system, JSON.stringify(r.platforms)),
       ...r.entries.map((e, i) =>
         env.DB.prepare("INSERT INTO request_entries (id, request_id, position, title, text, test, prototype) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
           .bind(crypto.randomUUID(), id, i, e.title, e.text, e.test ? 1 : 0, e.prototype ? 1 : 0)),

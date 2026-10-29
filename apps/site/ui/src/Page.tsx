@@ -1,13 +1,13 @@
 /**
- * openclapper.org: what the project is, where it comes from, the three apps, the state of support,
- * alpha, the maintainer, the hosted version, then the two forms. Every string comes from i18n.ts in the
- * chosen language. One centred axis: a slim sticky bar, the headline with the three app icons as its
+ * openclapper.org: what the project is, where it comes from, who it is for, the three apps, flexibility,
+ * the state of support, alpha, the maintainer, the hosted version, the plan ahead, then the two forms.
+ * Every string comes from copy.ts. One centred axis: a slim sticky bar, the headline with the three app icons as its
  * picture, then the chapters as alternating full-width bands with a numbered centred title and a 660px
  * reading column (design chosen in issue #2). The sections in the owner's voice are cards.
  */
 import { Button, IconButton, LinkButton, Modal, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
-import { useT } from "./i18n.ts";
+import { t } from "./copy.ts";
 import { Requests } from "./Requests.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
@@ -23,13 +23,11 @@ function useConfirmed(): "yes" | "no" | null {
   return state;
 }
 
-/** Language and theme: the two buttons every page's bar carries. */
+/** The theme button, which every page's bar carries. */
 export function Controls() {
   const [theme, setTheme] = useTheme();
-  const [t, lang, setLang] = useT();
   return (
     <>
-      <Button kind="ghost" size="sm" icon="translate" title={t.nav.langTitle} aria-label={t.nav.langTitle} lang={lang === "en" ? "de" : "en"} onClick={() => setLang(lang === "en" ? "de" : "en")}>{t.nav.lang}</Button>
       <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />
     </>
   );
@@ -65,7 +63,6 @@ function Band({ id, n, h, sub, wide, children }: { id: string; n: number; h: str
 }
 
 export function Page() {
-  const [t] = useT();
   const confirmed = useConfirmed();
   const [why, setWhy] = useState(false);
   const apps = [
@@ -79,6 +76,7 @@ export function Page() {
         <nav class="top__nav" aria-label="Page">
           <a href="#apps">{t.nav.apps}</a>
           <a href="#support">{t.nav.support}</a>
+          <a href="#plan">{t.nav.plan}</a>
           <a href="#ideas">{t.nav.ideas}</a>
           <a href="#waitlist">{t.nav.waitlist}</a>
           <a href={CORE} rel="noopener">GitHub</a>
@@ -117,7 +115,9 @@ export function Page() {
           </ul>
         </Band>
 
-        <Band id="support" n={4} h={t.support.h} sub={t.support.sub}>
+        <Band id="flex" n={4} h={t.flex.h} sub={t.flex.sub}><Voice p={t.flex.p} /></Band>
+
+        <Band id="support" n={5} h={t.support.h} sub={t.support.sub}>
           <ul class="support">
             <li><span class="tag">{t.support.browsersTag}</span><div><h3>{t.support.browsersH}</h3><p>{t.support.browsers}</p></div></li>
             <li><span class="tag">{t.support.mobileTag}</span><div><h3>{t.support.mobileH}</h3><p>{t.support.mobile}</p><span class="pill pill--soon">{t.support.ios}</span></div></li>
@@ -135,16 +135,34 @@ export function Page() {
           </Modal>
         </Band>
 
-        <Band id="alpha" n={5} h={t.alpha.h} sub={t.alpha.sub}><Voice p={t.alpha.p} /></Band>
-        <Band id="maintainer" n={6} h={t.maintainer.h} sub={t.maintainer.sub}><Voice p={t.maintainer.p} /></Band>
-        <Band id="hosted" n={7} h={t.hosted.h} sub={t.hosted.sub}><Voice p={t.hosted.p} /></Band>
+        <Band id="alpha" n={6} h={t.alpha.h} sub={t.alpha.sub}><Voice p={t.alpha.p} /></Band>
+        <Band id="maintainer" n={7} h={t.maintainer.h} sub={t.maintainer.sub}><Voice p={t.maintainer.p} /></Band>
+        <Band id="hosted" n={8} h={t.hosted.h} sub={t.hosted.sub}><Voice p={t.hosted.p} /></Band>
 
-        <Band id="ideas" n={8} h={t.ideas.h} sub={t.ideas.sub}>
+        <Band id="plan" n={9} h={t.plan.h} sub={t.plan.sub}>
+          <ol class="steps">
+            {t.plan.steps.map((s, i) => (
+              <li class={i === 0 ? "step step--now" : "step"} key={s.h}>
+                <span class="step__n num" aria-hidden="true">{i + 1}</span>
+                <div class="step__text">
+                  <h3>{s.h}{i === 0 && <span class="pill pill--ok step__now">{t.plan.now}</span>}</h3>
+                  <p>{s.p}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <aside class="ticker">
+            <div class="ticker__text"><h3>{t.plan.ticker}</h3><p>{t.plan.tickerP}</p></div>
+            <LinkButton href="#waitlist" kind="secondary" icon="arrow-down">{t.plan.tickerLink}</LinkButton>
+          </aside>
+        </Band>
+
+        <Band id="ideas" n={10} h={t.ideas.h} sub={t.ideas.sub}>
           <Voice p={[...t.ideas.p, t.ideas.language]} />
           <Requests />
         </Band>
 
-        <Band id="waitlist" n={9} h={t.waitlist.h} sub={t.waitlist.sub}>
+        <Band id="waitlist" n={11} h={t.waitlist.h} sub={t.waitlist.sub}>
           <p class="prose">{t.waitlist.p}</p>
           <Waitlist confirmed={confirmed} />
         </Band>

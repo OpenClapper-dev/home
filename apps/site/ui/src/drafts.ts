@@ -9,8 +9,9 @@ function read<T>(key: string): T | null {
   try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : null; } catch { return null; }
 }
 
-export function useDraft<T>(key: string, initial: () => T, isEmpty: (v: T) => boolean): [T, (v: T) => void, { restored: boolean; discard: () => void }] {
-  const first = useRef(read<T>(key));
+/** A draft from before a form grew a field is merged over today's defaults, so the new field starts as it should. */
+export function useDraft<T extends object>(key: string, initial: () => T, isEmpty: (v: T) => boolean): [T, (v: T) => void, { restored: boolean; discard: () => void }] {
+  const first = useRef<T | null>((() => { const stored = read<T>(key); return stored ? { ...initial(), ...stored } : null; })());
   const [value, setValue] = useState<T>(() => first.current ?? initial());
   const [restored, setRestored] = useState(() => first.current !== null && !isEmpty(first.current));
   useEffect(() => {

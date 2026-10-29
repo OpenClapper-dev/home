@@ -63,8 +63,8 @@ beforeEach(async () => {
   await env.DB.batch([env.DB.prepare("DELETE FROM request_entries"), env.DB.prepare("DELETE FROM requests"), env.DB.prepare("DELETE FROM waitlist")]);
 });
 
-const waitlist = (over: Record<string, unknown> = {}) => ({ email: "me@example.test", turnstile: "tok", ...over });
-const request = (over: Record<string, unknown> = {}) => ({ entries: [{ text: "Call sheets on the phone", test: true }], turnstile: "tok", ...over });
+const waitlist = (over: Record<string, unknown> = {}) => ({ email: "me@example.test", platforms: ["web"], turnstile: "tok", ...over });
+const request = (over: Record<string, unknown> = {}) => ({ entries: [{ text: "Call sheets on the phone", test: true }], contact: "@me", platforms: ["android"], turnstile: "tok", ...over });
 
 describe("turnstile", () => {
   test("no token, a failed check, a wrong action or a foreign hostname refuse before anything is stored", async () => {
@@ -102,9 +102,11 @@ describe("waiting list", () => {
     expect(sent[0].to).toBe("me@example.test");
     const link = sent[0].text.match(/https:\S+/)![0];
     expect(link.startsWith(`${SITE}/api/waitlist/confirm/`)).toBe(true);
-    const row = await env.DB.prepare("SELECT confirmed_at, token, positions FROM waitlist WHERE email = 'ME@example.test'").first<{ confirmed_at: string | null; token: string | null; positions: string }>();
+    const row = await env.DB.prepare("SELECT confirmed_at, token, positions, platforms, tester, updates FROM waitlist WHERE email = 'ME@example.test'").first<{ confirmed_at: string | null; token: string | null; positions: string; platforms: string; tester: number; updates: number }>();
     expect(row!.confirmed_at).toBeNull();
     expect(row!.positions).toBe('["dp","gaffer"]');
+    expect([row!.platforms, row!.tester, row!.updates]).toEqual(['["web"]', 1, 0]);
+    expect(sent[0].text).toContain("to join the tester waiting list:");
 
     const path = new URL(link).pathname;
     const r1 = await call(base, "GET", path);
@@ -138,6 +140,16 @@ describe("waiting list", () => {
     expect((await call(base, "GET", path)).headers.get("location")).toBe(`${SITE}/?confirmed=no#waitlist`);
     expect((await call(base, "GET", "/api/waitlist/confirm/not-a-token")).headers.get("location")).toBe(`${SITE}/?confirmed=no#waitlist`);
   });
+  test("the Call Sheet alone needs no platform; the mail and the row say what was picked", async () => {
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ platforms: [], tester: false, updates: true }) }), 200);
+    expect(sent[0].subject).toContain("Call Sheet");
+    expect(sent[0].text).toContain("to join the Call Sheet:");
+    const row = await env.DB.prepare("SELECT tester, updates FROM waitlist WHERE email = 'me@example.test'").first<{ tester: number; updates: number }>();
+    expect([row!.tester, row!.updates]).toEqual([0, 1]);
+    expect((await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "t@example.test", platforms: [] }) }), 400)).field).toBe("platforms");
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "b@example.test", updates: true }) }), 200);
+    expect(sent[1].text).toContain("to join the tester waiting list and the Call Sheet:");
+  });
   test("a failed mail keeps the row and answers 502", async () => {
     const broken: Env = { ...base, EMAIL: { async send() { throw new Error("quota"); } } };
     await json(call(broken, "POST", "/api/waitlist", { body: waitlist() }), 502);
@@ -151,6 +163,12 @@ describe("feature requests", () => {
     const r = await json<{ id: string }>(call(base, "POST", "/api/requests", { body: request({ entries: [{ title: "Call sheets", text: "On the phone", test: true }, { text: "Weather per day", prototype: true }], positions: ["second-ad"], years: 5, contact: "@me" }) }), 201);
     const entries = await env.DB.prepare("SELECT title, text, test, prototype FROM request_entries WHERE request_id = ?1 ORDER BY position").bind(r.id).all();
     expect(entries.results).toEqual([{ title: "Call sheets", text: "On the phone", test: 1, prototype: 0 }, { title: null, text: "Weather per day", test: 0, prototype: 1 }]);
+    expect((await env.DB.prepare("SELECT platforms FROM requests WHERE id = ?1").bind(r.id).first<{ platforms: string }>())!.platforms).toBe('["android"]');
+  });
+  test("asking to test needs a contact and a platform", async () => {
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ contact: "" }) }), 400)).field).toBe("contact");
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ platforms: [] }) }), 400)).field).toBe("platforms");
+    await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "no flags" }], contact: "", platforms: [] }) }), 201);
   });
   test("an empty entry is refused with its field", async () => {
     const r = await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "ok" }, { title: "only a title" }] }) }), 400);
@@ -183,11 +201,13 @@ describe("admin", () => {
     await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "b@example.test" }) }), 200);
     await call(base, "GET", new URL(sent[0].text.match(/https:\S+/)![0]).pathname);
     const t = await jwt();
-    const list = await json<{ waitlist: { email: string; confirmed_at: string | null; positions: string[]; id: string }[] }>(call(base, "GET", "/admin/api/waitlist", { jwt: t }), 200);
+    const list = await json<{ waitlist: { email: string; confirmed_at: string | null; positions: string[]; platforms: string[]; tester: boolean; updates: boolean; id: string }[] }>(call(base, "GET", "/admin/api/waitlist", { jwt: t }), 200);
     expect(list.waitlist.map((w) => [w.email, !!w.confirmed_at])).toEqual([["b@example.test", false], ["a@example.test", true]]);
     expect(list.waitlist[1].positions).toEqual(["dp"]);
+    expect([list.waitlist[1].platforms, list.waitlist[1].tester, list.waitlist[1].updates]).toEqual([["web"], true, false]);
     const csv = await (await call(base, "GET", "/admin/api/waitlist.csv", { jwt: t })).text();
-    expect(csv.split("\n")[1].startsWith('a@example.test,"Ann ""A""",german,dp,,,')).toBe(true);
+    expect(csv.split("\n")[0]).toBe("email,nickname,tester,updates,platforms,system,positions,other_position,years,confirmed_at,invited_at");
+    expect(csv.split("\n")[1].startsWith('a@example.test,"Ann ""A""",1,0,web,german,dp,,,')).toBe(true);
     expect(csv).not.toContain("b@example.test");
     const a = list.waitlist[1].id;
     await json(call(base, "PATCH", `/admin/api/waitlist/${a}`, { jwt: t, body: { invited: true } }), 200);

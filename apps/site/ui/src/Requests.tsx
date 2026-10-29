@@ -2,23 +2,22 @@
  * Feature requests: one or many per submission, each with an optional title, the text, and whether
  * the person would test or help shape it, set per entry. The person block and the contact come once.
  */
-import { LIMITS } from "@openclapper/home-vocab";
+import { LIMITS, type Platform } from "@openclapper/home-vocab";
 import { Banner, Button, Check, Field, IconButton, Input, Textarea } from "@openclapper/home-ui";
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { useDraft } from "./drafts.ts";
-import { useT } from "./i18n.ts";
-import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
+import { t } from "./copy.ts";
+import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState, Platforms } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
 interface Entry { title: string; text: string; test: boolean; prototype: boolean }
-interface State { entries: Entry[]; person: PersonState; contact: string }
+interface State { entries: Entry[]; person: PersonState; contact: string; platforms: Platform[] }
 const emptyEntry = (): Entry => ({ title: "", text: "", test: false, prototype: false });
-const empty = (): State => ({ entries: [emptyEntry()], person: emptyPerson(), contact: "" });
-const isEmpty = (s: State) => s.entries.every((e) => !e.title && !e.text && !e.test && !e.prototype) && personIsEmpty(s.person) && !s.contact;
+const empty = (): State => ({ entries: [emptyEntry()], person: emptyPerson(), contact: "", platforms: [] });
+const isEmpty = (s: State) => s.entries.every((e) => !e.title && !e.text && !e.test && !e.prototype) && personIsEmpty(s.person) && !s.contact && s.platforms.length === 0;
 
 export function Requests() {
-  const [t] = useT();
   const r = t.rq;
   const [s, set, draft] = useDraft<State>("draft:requests", empty, isEmpty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -28,6 +27,7 @@ export function Requests() {
 
   const patch = (i: number, p: Partial<Entry>) => set({ ...s, entries: s.entries.map((e, j) => (j === i ? { ...e, ...p } : e)) });
   const wantsContact = s.entries.some((e) => e.test || e.prototype);
+  const wantsTest = s.entries.some((e) => e.test);
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -38,7 +38,7 @@ export function Requests() {
     setBusy(true);
     setErrors({});
     try {
-      await post("/api/requests", { entries: s.entries.map((en) => ({ title: en.title || null, text: en.text, test: en.test, prototype: en.prototype })), ...personBody(s.person), contact: s.contact || null, turnstile: ts.token });
+      await post("/api/requests", { entries: s.entries.map((en) => ({ title: en.title || null, text: en.text, test: en.test, prototype: en.prototype })), ...personBody(s.person), contact: s.contact || null, platforms: s.platforms, turnstile: ts.token });
       setDone(s.entries.length);
       draft.discard();
     } catch (err) {
@@ -79,11 +79,12 @@ export function Requests() {
       <div>
         <Button kind="secondary" icon="plus" disabled={s.entries.length >= LIMITS.entries} onClick={() => set({ ...s, entries: [...s.entries, emptyEntry()] })}>{r.addAnother}</Button>
       </div>
-      <Disclose label={t.form.moreContact} open={wantsContact || !personIsEmpty(s.person) || !!s.contact || !!(errors.contact || errors.system || errors.positions || errors.years || errors.other_position)}>
-        <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
-        <Field label={r.contact} help={wantsContact ? r.contactHelpWants : r.contactHelp} error={errors.contact} optional={t.form.optional}>
+      <Disclose label={t.form.moreContact} open={wantsContact || !personIsEmpty(s.person) || !!s.contact || s.platforms.length > 0 || !!(errors.contact || errors.platforms || errors.system || errors.positions || errors.years || errors.other_position)}>
+        <Field label={r.contact} required={wantsContact} help={wantsContact ? r.contactHelpWants : r.contactHelp} error={errors.contact} optional={t.form.optional}>
           {(id, invalid) => <Textarea id={id} invalid={invalid} maxLength={LIMITS.contact} rows={2} value={s.contact} onInput={(e) => set({ ...s, contact: e.currentTarget.value })} placeholder={r.contactPh} />}
         </Field>
+        <Platforms value={s.platforms} onChange={(platforms) => set({ ...s, platforms })} required={wantsTest} error={errors.platforms} />
+        <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
       </Disclose>
       <div class="turnstile" ref={ts.ref} />
       {(errors.turnstile || errors.form || errors.entries || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.entries ?? errors.turnstile ?? t.form.botFailed} role="alert">{ts.failed && !errors.form ? t.form.reload : undefined}</Banner>}
