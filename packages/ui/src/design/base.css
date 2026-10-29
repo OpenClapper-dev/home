@@ -14,7 +14,7 @@ textarea { font: inherit; }
 .f-textarea::placeholder { color: var(--text-dim); opacity: 1; }
 .f-input input { font-size: var(--text-body-lg); }
 /* Buttons used as checkboxes and switches keep the design-system look (components.css in core). */
-button.f-check, button.f-switch { background: none; border: 0; padding: 0; color: inherit; font: inherit; }
+button.f-check, button.f-switch { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; }
 .f-chip { font-size: var(--text-body); height: 36px; }
 /* Inline SVG icons sit on the text baseline at the size of the surrounding text. */
 .f-svg { width: 1.25em; height: 1.25em; flex: none; vertical-align: -0.3em; fill: currentColor; }
