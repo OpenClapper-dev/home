@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <title>Privacy · OpenClapper</title>
+    <meta name="description" content="What openclapper.org stores when you join the waiting list or send a feature request, and nothing else." />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <script>
+      // Theme before first paint, like the Studio: localStorage["theme"] = "sun" | "set", else the OS.
+      (function () {
+        var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+        var o = null;
+        try { o = localStorage.getItem("theme"); } catch (e) {}
+        document.documentElement.setAttribute("data-theme", o === "sun" || o === "set" ? o : mq && mq.matches ? "set" : "sun");
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/privacy.tsx"></script>
+  </body>
+</html>

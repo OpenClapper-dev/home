@@ -1,0 +1,67 @@
+# Deploys openclapper.org: migrates D1, builds the page with the production Turnstile key, deploys the
+# Worker and sets its secret. Run by hand (Actions → Deploy → Run workflow). Every setting comes from
+# the chosen GitHub environment's variables and secrets, never from a file: docs/deploying.md.
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The GitHub environment whose variables and secrets to use
+        type: environment
+        default: production
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+      TURNSTILE_SITEKEY: ${{ vars.TURNSTILE_SITEKEY }}
+      D1_DATABASE_NAME: ${{ vars.D1_DATABASE_NAME }}
+      D1_DATABASE_ID: ${{ vars.D1_DATABASE_ID }}
+      D1_LOCATION: ${{ vars.D1_LOCATION }}
+      WORKER_NAME: ${{ vars.WORKER_NAME }}
+      SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+      SITE_URL: ${{ vars.SITE_URL }}
+      MAIL_FROM: ${{ vars.MAIL_FROM }}
+      ACCESS_TEAM_DOMAIN: ${{ vars.ACCESS_TEAM_DOMAIN }}
+      ACCESS_AUD: ${{ vars.ACCESS_AUD }}
+    steps:
+      - name: Settings
+        run: |
+          echo "Environment: ${{ inputs.environment }}"
+          for v in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID TURNSTILE_SECRET TURNSTILE_SITEKEY; do
+            [ -n "${!v}" ] || { echo "::error::Set $v in the environment (docs/deploying.md)"; exit 1; }
+          done
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy config (creates the D1 database on the first run)
+        run: node scripts/deploy-config.mjs --provision
+      - name: Migrate D1
+        working-directory: apps/site
+        run: pnpm exec wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc
+      - name: Build and deploy
+        working-directory: apps/site
+        run: pnpm exec vite build && pnpm exec wrangler deploy --config wrangler.deploy.jsonc
+      - name: Turnstile secret
+        working-directory: apps/site
+        run: printf '%s' "$TURNSTILE_SECRET" | pnpm exec wrangler secret put TURNSTILE_SECRET --config wrangler.deploy.jsonc
+      - name: Admin locked
+        if: env.ACCESS_TEAM_DOMAIN == '' || env.ACCESS_AUD == ''
+        run: echo "::notice::/admin refuses every request until ACCESS_TEAM_DOMAIN and ACCESS_AUD are set (docs/deploying.md)."

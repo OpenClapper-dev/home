@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <title>OpenClapper · an open-source way to organise film productions</title>
+    <meta name="description" content="OpenClapper is a plan for a flexible, self-hostable toolset for film prep and production, built together with the people who do the job. Send what you need, or sign up as a tester." />
+    <meta property="og:title" content="OpenClapper" />
+    <meta property="og:description" content="An open-source way to organise film productions, built together with the people who do the job." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://openclapper.org/" />
+    <meta property="og:image" content="https://openclapper.org/icons/og-1024.png" />
+    <link rel="canonical" href="https://openclapper.org/" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <script>
+      // Theme before first paint, like the Studio: localStorage["theme"] = "sun" | "set", else the OS.
+      (function () {
+        var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+        var o = null;
+        try { o = localStorage.getItem("theme"); } catch (e) {}
+        document.documentElement.setAttribute("data-theme", o === "sun" || o === "set" ? o : mq && mq.matches ? "set" : "sun");
+      })();
+    </script>
+    <!-- Turnstile (the bot check on both forms) is the one script from another origin; the CSP in public/_headers allows it. -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

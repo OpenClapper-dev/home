@@ -1,0 +1,11 @@
+# Response headers of the static pages (Workers static assets). API answers set their own (src/http.ts).
+# The script hash is the theme script shared by the three HTML files: after editing it, `node
+# scripts/csp-hash.mjs` prints the new one (`pnpm build` fails until it matches). Turnstile is the one
+# script and frame from another origin; the page calls only its own API.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-gCQB4rNZReW2nsLfbXjaLxB9T/ozF5IKtQs6QOq6RL0=' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; frame-src https://challenges.cloudflare.com; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()
+/admin/*
+  X-Robots-Tag: noindex

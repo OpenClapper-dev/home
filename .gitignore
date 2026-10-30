@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.env.*
+dist/
+worker-configuration.d.ts
+.playwright-mcp/
+.pnpm-store
+
+# Deploy config, generated from the environment by scripts/deploy-config.mjs (docs/deploying.md).
+wrangler.deploy.jsonc
