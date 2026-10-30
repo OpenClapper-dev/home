@@ -1,8 +1,8 @@
 /**
- * The one mail this site sends: the sign-up's confirmation link, through Cloudflare Email Service
- * (the `send_email` binding; the domain of MAIL_FROM must be onboarded on the account). Text and HTML
- * both, as the service recommends; no tracking, no images. The mail names what was picked: the tester
- * waiting list, the Call Sheet (a mail when the roadmap moves a step), or both.
+ * The one mail this site sends, through Cloudflare Email Service (the `send_email` binding; the domain
+ * of MAIL_FROM must be onboarded on the account): the sign-up's confirmation link, which names what was
+ * picked (the tester waiting list, the Call Sheet, or both). A request's email gets no mail: an
+ * unverified address must not make the site send anything. Text and HTML both; no tracking, no images.
  */
 export interface Mailer {
   send(message: { to: string; from: string; subject: string; text: string; html: string }): Promise<unknown>;
@@ -39,3 +39,4 @@ export async function sendConfirmation(mailer: Mailer, env: { MAIL_FROM: string;
 </body></html>`;
   await mailer.send({ to, from: env.MAIL_FROM, subject: `Confirm your email for ${what === "the Call Sheet" ? "the OpenClapper Call Sheet" : "the OpenClapper waiting list"}`, text, html });
 }
+

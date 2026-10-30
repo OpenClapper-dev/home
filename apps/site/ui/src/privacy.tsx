@@ -19,6 +19,7 @@ function Privacy() {
           <p class="lede">{p.lede}</p>
           <h2>{p.hostingH}</h2><p>{p.hosting}</p>
           <h2>{p.botH}</h2><p>{p.bot}</p>
+          <h2>{p.aboutH}</h2><p>{p.about}</p>
           <h2>{p.wlH}</h2><p>{p.wl1}</p><p>{p.wl2}</p>
           <h2>{p.rqH}</h2><p>{p.rq1}</p><p>{p.rq2}</p>
           <h2>{p.storageH}</h2><p>{p.storage}</p>

@@ -53,14 +53,13 @@ export function registerForms(router: Router<Ctx>) {
     if (existing && existing.token_sent_at && now.getTime() - Date.parse(existing.token_sent_at) < RESEND_AFTER_MS) return json({ ok: true });
 
     const t = token();
-    const positions = JSON.stringify(w.positions);
-    const platforms = JSON.stringify(w.platforms);
+    const about = [JSON.stringify(w.systems), JSON.stringify(w.positions), w.other_position, w.years, JSON.stringify(w.languages), w.other_language] as const;
     if (existing) {
-      await env.DB.prepare("UPDATE waitlist SET nickname = ?2, positions = ?3, other_position = ?4, years = ?5, token = ?6, token_sent_at = ?7, system = ?8, tester = ?9, updates = ?10, platforms = ?11 WHERE id = ?1")
-        .bind(existing.id, w.nickname, positions, w.other_position, w.years, t, now.toISOString(), w.system, w.tester ? 1 : 0, w.updates ? 1 : 0, platforms).run();
+      await env.DB.prepare("UPDATE waitlist SET tester = ?2, updates = ?3, platforms = ?4, systems = ?5, positions = ?6, other_position = ?7, years = ?8, languages = ?9, other_language = ?10, token = ?11, token_sent_at = ?12 WHERE id = ?1")
+        .bind(existing.id, w.tester ? 1 : 0, w.updates ? 1 : 0, JSON.stringify(w.platforms), ...about, t, now.toISOString()).run();
     } else {
-      await env.DB.prepare("INSERT INTO waitlist (id, email, nickname, positions, other_position, years, created_at, token, token_sent_at, system, tester, updates, platforms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?7, ?9, ?10, ?11, ?12)")
-        .bind(crypto.randomUUID(), w.email, w.nickname, positions, w.other_position, w.years, now.toISOString(), t, w.system, w.tester ? 1 : 0, w.updates ? 1 : 0, platforms).run();
+      await env.DB.prepare("INSERT INTO waitlist (id, email, tester, updates, platforms, systems, positions, other_position, years, languages, other_language, created_at, token, token_sent_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?12)")
+        .bind(crypto.randomUUID(), w.email, w.tester ? 1 : 0, w.updates ? 1 : 0, JSON.stringify(w.platforms), ...about, now.toISOString(), t).run();
     }
     try {
       await sendConfirmation(env.EMAIL, env, w.email, t, w);
@@ -90,11 +89,11 @@ export function registerForms(router: Router<Ctx>) {
     await guard(ctx, body, "request");
     const id = crypto.randomUUID();
     await env.DB.batch([
-      env.DB.prepare("INSERT INTO requests (id, created_at, positions, other_position, years, contact, system, platforms) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
-        .bind(id, new Date().toISOString(), JSON.stringify(r.positions), r.other_position, r.years, r.contact, r.system, JSON.stringify(r.platforms)),
+      env.DB.prepare("INSERT INTO requests (id, created_at, email, systems, positions, other_position, years, languages, other_language) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)")
+        .bind(id, new Date().toISOString(), r.email, JSON.stringify(r.systems), JSON.stringify(r.positions), r.other_position, r.years, JSON.stringify(r.languages), r.other_language),
       ...r.entries.map((e, i) =>
-        env.DB.prepare("INSERT INTO request_entries (id, request_id, position, title, text, test, prototype) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
-          .bind(crypto.randomUUID(), id, i, e.title, e.text, e.test ? 1 : 0, e.prototype ? 1 : 0)),
+        env.DB.prepare("INSERT INTO request_entries (id, request_id, position, title, text, prototype) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+          .bind(crypto.randomUUID(), id, i, e.title, e.text, e.prototype ? 1 : 0)),
     ]);
     return json({ ok: true, id }, 201);
   });

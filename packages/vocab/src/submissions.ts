@@ -16,43 +16,58 @@ export class SubmissionError extends Error {
 
 export const LIMITS = {
   email: 320,
-  nickname: 80,
-  contact: 500,
+  otherLanguage: 60,
   title: 160,
   text: 8000,
   otherPosition: 80,
   entries: 20,
   positions: 12,
-  years: 70,
 } as const;
 
 /** Loose on purpose: a confirmation mail decides whether the address works. */
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Which film system the person worked in: the titles, departments and habits differ. */
+/** Which film systems the person worked in (many): the titles, departments and habits differ. */
 export const SYSTEMS = ["german", "us", "other"] as const;
 export type FilmSystem = (typeof SYSTEMS)[number];
 export const SYSTEM_LABEL: Record<FilmSystem, string> = { german: "German", us: "US / International", other: "Other" };
 
+/** Years in the industry, as a band: exact numbers invite hesitation and say no more. */
+export const YEARS = ["lt1", "1-3", "3-6", "6-9", "9-12", "12+"] as const;
+export type YearsBand = (typeof YEARS)[number];
+export const YEARS_LABEL: Record<YearsBand, string> = { lt1: "Less than a year", "1-3": "1 to 3", "3-6": "3 to 6", "6-9": "6 to 9", "9-12": "9 to 12", "12+": "12 or more" };
+
+/** Languages the person could test in, or be asked questions in (many); "other" names one. */
+export const LANGUAGES = ["german", "english", "other"] as const;
+export type Language = (typeof LANGUAGES)[number];
+export const LANGUAGE_LABEL: Record<Language, string> = { german: "German", english: "English", other: "Another language" };
+
+/**
+ * The about-you block, the same on both forms and required on both: the owner needs to see which
+ * direction input comes from, to even out biases early. No name is asked.
+ */
 export interface Person {
-  /** The system the person worked in; null when not given. */
-  system: FilmSystem | null;
-  /** Position ids (positions.ts), in the order picked. */
+  /** The systems the person worked in, at least one. */
+  systems: FilmSystem[];
+  /** Position ids (positions.ts), in the order picked, at least one. */
   positions: string[];
-  /** What "other" means when it is picked; null otherwise. */
+  /** What "other" means when it is picked; required then, null otherwise. */
   other_position: string | null;
-  /** Years in the industry altogether, across every position; null when not given. */
-  years: number | null;
+  /** Years in the industry altogether, across every position. */
+  years: YearsBand;
+  /** Languages to test or answer questions in, at least one. */
+  languages: Language[];
+  /** Which language "other" means when it is picked; required then, null otherwise. */
+  other_language: string | null;
 }
 
 /** Where the apps run; what a tester can test on. */
 export const PLATFORMS = ["web", "android", "ios"] as const;
 export type Platform = (typeof PLATFORMS)[number];
-export const PLATFORM_LABEL: Record<Platform, string> = { web: "Web (Studio, Admin)", android: "Android", ios: "iOS (once it exists)" };
+export const PLATFORM_LABEL: Record<Platform, string> = { web: "Web", android: "Android", ios: "iOS" };
 
 export interface WaitlistSubmission extends Person {
   email: string;
-  nickname: string | null;
   /** Wants to be picked as an alpha tester (roadmap step 5). */
   tester: boolean;
   /** Wants the Call Sheet: a mail when the roadmap moves a step. */
@@ -64,18 +79,14 @@ export interface WaitlistSubmission extends Person {
 export interface RequestEntry {
   title: string | null;
   text: string;
-  /** Willing to test this feature once it exists. */
-  test: boolean;
-  /** Willing to be contacted while this feature is being shaped. */
+  /** Willing to answer questions while this is taking shape. */
   prototype: boolean;
 }
 
+/** A feature request: anonymous unless an email is given; the email is required once an entry asks for questions. */
 export interface RequestSubmission extends Person {
   entries: RequestEntry[];
-  /** How to reach the person, in their words (an email, a handle); required once an entry asks to test or to be contacted. */
-  contact: string | null;
-  /** Platforms the person could test on; required once an entry asks to test. */
-  platforms: Platform[];
+  email: string | null;
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -102,6 +113,25 @@ function platforms(v: unknown): Platform[] {
   return out;
 }
 
+/** A list of ids out of a fixed set, deduplicated; absent or null is empty. */
+function picks<T extends string>(v: unknown, field: string, all: readonly T[]): T[] {
+  const raw = v === undefined || v === null ? [] : v;
+  if (!Array.isArray(raw)) throw new SubmissionError(field, `${field} must be a list`);
+  const out: T[] = [];
+  for (const x of raw) {
+    if (!all.includes(x as T)) throw new SubmissionError(field, `unknown ${field.replace(/s$/, "")}`);
+    if (!out.includes(x as T)) out.push(x as T);
+  }
+  return out;
+}
+
+/** The optional email of a request: absent or blank is null; otherwise it must look like an address. */
+function optionalEmail(v: unknown): string | null {
+  const t = optionalText(v, "email", LIMITS.email);
+  if (t !== null && !EMAIL.test(t)) throw new SubmissionError("email", "this does not look like an email address");
+  return t;
+}
+
 function person(b: Record<string, unknown>): Person {
   const raw = b.positions === undefined || b.positions === null ? [] : b.positions;
   if (!Array.isArray(raw)) throw new SubmissionError("positions", "positions must be a list");
@@ -111,19 +141,17 @@ function person(b: Record<string, unknown>): Person {
     if (!isPositionId(id)) throw new SubmissionError("positions", "unknown position");
     if (!positions.includes(id)) positions.push(id);
   }
+  if (positions.length === 0) throw new SubmissionError("positions", "pick at least one position");
   const other_position = positions.includes("other") ? optionalText(b.other_position, "other_position", LIMITS.otherPosition) : null;
-  let years: number | null = null;
-  if (b.years !== undefined && b.years !== null && b.years !== "") {
-    const n = typeof b.years === "string" ? Number(b.years) : b.years;
-    if (typeof n !== "number" || !Number.isInteger(n) || n < 0 || n > LIMITS.years) throw new SubmissionError("years", `years must be a whole number from 0 to ${LIMITS.years}`);
-    years = n;
-  }
-  let system: FilmSystem | null = null;
-  if (b.system !== undefined && b.system !== null && b.system !== "") {
-    if (!(SYSTEMS as readonly string[]).includes(b.system as string)) throw new SubmissionError("system", "unknown system");
-    system = b.system as FilmSystem;
-  }
-  return { system, positions, other_position, years };
+  if (positions.includes("other") && !other_position) throw new SubmissionError("other_position", "say what \"other\" is");
+  const systems = picks(b.systems, "systems", SYSTEMS);
+  if (systems.length === 0) throw new SubmissionError("systems", "pick at least one system");
+  if (!(YEARS as readonly string[]).includes(b.years as string)) throw new SubmissionError("years", "pick your years in the industry");
+  const languages = picks(b.languages, "languages", LANGUAGES);
+  if (languages.length === 0) throw new SubmissionError("languages", "pick at least one language");
+  const other_language = languages.includes("other") ? optionalText(b.other_language, "other_language", LIMITS.otherLanguage) : null;
+  if (languages.includes("other") && !other_language) throw new SubmissionError("other_language", "which language?");
+  return { systems, positions, other_position, years: b.years as YearsBand, languages, other_language };
 }
 
 export function parseWaitlist(v: unknown): WaitlistSubmission {
@@ -138,7 +166,7 @@ export function parseWaitlist(v: unknown): WaitlistSubmission {
   if (!tester && !updates) throw new SubmissionError("tester", "pick the waiting list, the Call Sheet, or both");
   const ps = platforms(v.platforms);
   if (tester && ps.length === 0) throw new SubmissionError("platforms", "pick at least one platform you could test on");
-  return { email, nickname: optionalText(v.nickname, "nickname", LIMITS.nickname), tester, updates, platforms: ps, ...person(v) };
+  return { email, tester, updates, platforms: ps, ...person(v) };
 }
 
 export function parseRequest(v: unknown): RequestSubmission {
@@ -151,11 +179,9 @@ export function parseRequest(v: unknown): RequestSubmission {
     const text = typeof e.text === "string" ? e.text.trim() : "";
     if (!text) throw new SubmissionError(`${f}.text`, "the request text is required");
     if (text.length > LIMITS.text) throw new SubmissionError(`${f}.text`, `longer than ${LIMITS.text} characters`);
-    return { title: optionalText(e.title, `${f}.title`, LIMITS.title), text, test: e.test === true, prototype: e.prototype === true };
+    return { title: optionalText(e.title, `${f}.title`, LIMITS.title), text, prototype: e.prototype === true };
   });
-  const contact = optionalText(v.contact, "contact", LIMITS.contact);
-  const ps = platforms(v.platforms);
-  if (entries.some((e) => e.test || e.prototype) && !contact) throw new SubmissionError("contact", "say how to reach you, since you asked to test or to be contacted");
-  if (entries.some((e) => e.test) && ps.length === 0) throw new SubmissionError("platforms", "pick at least one platform you could test on");
-  return { entries, contact, platforms: ps, ...person(v) };
+  const email = optionalEmail(v.email);
+  if (entries.some((e) => e.prototype) && !email) throw new SubmissionError("email", "leave an email, since you asked for questions");
+  return { entries, email, ...person(v) };
 }

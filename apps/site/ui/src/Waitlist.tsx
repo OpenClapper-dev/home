@@ -1,7 +1,7 @@
 /**
  * The sign-up: the tester waiting list (roadmap step five), the Call Sheet (a mail when the roadmap
- * moves), or both. An email; for testers the platforms they could test on; the rest optional. Double
- * opt-in through the confirmation mail.
+ * moves), or both. An email, for testers the platforms they could test on, and the about-you block,
+ * all required. Double opt-in through the confirmation mail.
  */
 import { LIMITS, type Platform } from "@openclapper/home-vocab";
 import { Banner, Button, Check, Field, Input } from "@openclapper/home-ui";
@@ -9,12 +9,12 @@ import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
 import { t } from "./copy.ts";
 import { useDraft } from "./drafts.ts";
-import { Disclose, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState, Platforms } from "./PersonFields.tsx";
+import { AboutHead, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState, Platforms } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
 
-interface State { email: string; nickname: string; tester: boolean; updates: boolean; platforms: Platform[]; person: PersonState }
-const empty = (): State => ({ email: "", nickname: "", tester: true, updates: false, platforms: [], person: emptyPerson() });
-const isEmpty = (s: State) => !s.email && !s.nickname && s.tester && !s.updates && s.platforms.length === 0 && personIsEmpty(s.person);
+interface State { email: string; tester: boolean; updates: boolean; platforms: Platform[]; person: PersonState }
+const empty = (): State => ({ email: "", tester: true, updates: false, platforms: [], person: emptyPerson() });
+const isEmpty = (s: State) => !s.email && s.tester && !s.updates && s.platforms.length === 0 && personIsEmpty(s.person);
 
 export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
   const [s, set, draft] = useDraft<State>("draft:waitlist", empty, isEmpty);
@@ -29,7 +29,7 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
     setBusy(true);
     setErrors({});
     try {
-      await post("/api/waitlist", { email: s.email, nickname: s.nickname || null, tester: s.tester, updates: s.updates, platforms: s.tester ? s.platforms : [], ...personBody(s.person), turnstile: ts.token });
+      await post("/api/waitlist", { email: s.email, tester: s.tester, updates: s.updates, platforms: s.tester ? s.platforms : [], ...personBody(s.person), turnstile: ts.token });
       setDone(s.email);
       draft.discard();
     } catch (err) {
@@ -58,13 +58,11 @@ export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
           </div>
         )}
       </Field>
-      {s.tester && <Platforms value={s.platforms} onChange={(platforms) => set({ ...s, platforms })} required error={errors.platforms} />}
-      <Disclose label={t.form.more} open={!!s.nickname || !personIsEmpty(s.person) || !!(errors.nickname || errors.system || errors.positions || errors.years || errors.other_position)}>
-        <Field label={t.wl.nickname} error={errors.nickname} optional={t.form.optional}>
-          {(id, invalid) => <Input id={id} invalid={invalid} autoComplete="given-name" maxLength={LIMITS.nickname} value={s.nickname} onInput={(e) => set({ ...s, nickname: e.currentTarget.value })} />}
-        </Field>
+      {s.tester && <Platforms value={s.platforms} onChange={(platforms) => set({ ...s, platforms })} error={errors.platforms} />}
+      <div class="about">
+        <AboutHead why={t.wl.aboutWhy} />
         <PersonFields value={s.person} onChange={(person) => set({ ...s, person })} errors={errors} />
-      </Disclose>
+      </div>
       <div class="turnstile" ref={ts.ref} />
       {(errors.turnstile || errors.form || ts.failed) && <Banner kind="danger" title={errors.form ?? errors.turnstile ?? t.form.botFailed} role="alert">{ts.failed && !errors.form ? t.form.reload : undefined}</Banner>}
       <div class="form__actions">

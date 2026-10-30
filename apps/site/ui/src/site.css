@@ -15,14 +15,11 @@
 .lede { font-size: clamp(17px, 2vw, 20px); line-height: var(--lh-body); color: var(--text-dim); text-wrap: pretty; max-width: 620px; }
 .hero__cta { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
 .hero__status { display: inline-flex; align-items: center; gap: var(--space-2); font: var(--weight-bold) var(--text-micro)/1.3 var(--font-sans); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--warn-ink); background: var(--warn-tint); border: var(--bw) solid var(--warn); border-radius: var(--radius-pill); padding: 5px 12px; max-width: 100%; text-align: center; }
-.hero__apps { list-style: none; margin: var(--space-6) 0 0; padding: 0; display: flex; gap: var(--space-5); }
-.hero__apps img { width: 96px; height: 96px; border-radius: 22px; box-shadow: var(--elev-2); display: block; }
 
 /* The chapters: alternating full-width bands, a numbered centred title, a reading column. */
 .band { padding: 72px var(--space-6); }
 .band:nth-of-type(even) { background: var(--surface); border-top: var(--bw) solid var(--border-subtle); border-bottom: var(--bw) solid var(--border-subtle); }
 .col { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); scroll-margin-top: 72px; }
-.col--wide { max-width: 980px; }
 .band__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-2); }
 .band__n { font: var(--weight-bold) 24px/1 var(--font-mono); color: var(--accent); letter-spacing: var(--tracking-caps); }
 .band h2 { font: var(--weight-heavy) clamp(26px, 3.5vw, 36px)/var(--lh-tight) var(--font-sans); letter-spacing: -0.015em; text-wrap: balance; }
@@ -30,7 +27,6 @@
 .band h3 { font: var(--weight-bold) var(--text-title)/var(--lh-snug) var(--font-sans); }
 
 .prose { display: flex; flex-direction: column; gap: var(--space-4); text-wrap: pretty; }
-.prose--center { text-align: center; max-width: 660px; margin: 0 auto; }
 .prose h1 { font: var(--weight-heavy) clamp(28px, 5vw, 40px)/var(--lh-tight) var(--font-sans); }
 .prose h2 { font: var(--weight-bold) var(--text-heading)/var(--lh-snug) var(--font-sans); margin-top: var(--space-3); }
 .prose ul { padding-left: 1.2em; display: flex; flex-direction: column; gap: var(--space-1); }
@@ -39,20 +35,7 @@
 .voice { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); background: var(--surface); border: var(--bw) solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--elev-1); text-wrap: pretty; }
 .band:nth-of-type(even) .voice { background: var(--bg); }
 
-/* The ecosystem: three tiles. */
-.apps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-8); }
-.app { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-2); }
-.app img { width: 72px; height: 72px; border-radius: 16px; margin-bottom: var(--space-2); }
-.app h3 { font: var(--weight-bold) var(--text-heading)/1 var(--font-sans); }
-.app p { color: var(--text-dim); text-wrap: pretty; margin-top: var(--space-1); }
 
-/* The state of support: a tagged list. */
-.support { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.support li { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-5); padding: var(--space-5) 0; border-top: var(--bw) solid var(--border-subtle); }
-.support li:last-child { border-bottom: var(--bw) solid var(--border-subtle); }
-.support li > div { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
-.support p { color: var(--text-dim); }
-.tag { font: var(--weight-bold) var(--text-micro)/1.6 var(--font-sans); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text-dim); }
 
 .pill { display: inline-block; font: var(--weight-bold) var(--text-caption)/1 var(--font-sans); padding: 4px 8px; border-radius: var(--radius-pill); border: var(--bw) solid; white-space: nowrap; width: max-content; }
 .pill--ok { color: var(--ok); border-color: var(--ok); background: var(--ok-tint); }
@@ -90,16 +73,7 @@
 /* Turnstile's widget is 300px wide and does not shrink: on the narrowest phones the box scrolls instead of the page. */
 .turnstile { min-height: 65px; max-width: 100%; overflow-x: auto; }
 
-/* Optional blocks behind a toggle (forms): the person fields, the positions list. */
-.disclose { display: flex; flex-direction: column; gap: var(--space-4); }
-/* The toggle carries a long label: it wraps instead of running off a phone screen. */
-.disclose > div > .f-btn { white-space: normal; height: auto; min-height: var(--control-md); padding-top: 8px; padding-bottom: 8px; max-width: 100%; text-align: left; line-height: 1.25; }
-.disclose__body { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-2); }
 
-/* Tablets: the three tiles become one column before they get cramped. */
-@media (max-width: 860px) {
-  .apps { grid-template-columns: 1fr; gap: var(--space-6); }
-}
 
 /* Phones: fewer things side by side, nothing wider than the screen. */
 @media (max-width: 760px) {
@@ -108,11 +82,8 @@
   .top__nav--keep { display: flex; } /* the privacy page: one link, room enough */
   .hero { padding: var(--space-10) var(--space-4) var(--space-8); gap: var(--space-5); }
   .hero__cta { flex-direction: column; align-items: stretch; width: 100%; }
-  .hero__apps { gap: var(--space-4); }
-  .hero__apps img { width: 64px; height: 64px; border-radius: 15px; }
   .band { padding: var(--space-10) var(--space-4); }
   .col { scroll-margin-top: 64px; }
-  .support li { grid-template-columns: 1fr; gap: var(--space-2); }
   .voice { padding: var(--space-5); }
   .page--narrow { padding: var(--space-8) var(--space-4) var(--space-10); }
   .form { padding: var(--space-4); }
@@ -149,3 +120,17 @@
 .want .f-check { align-items: flex-start; }
 .want .f-check__box { margin-top: 2px; }
 .want .f-check > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+
+/* The request form's about-you block: always open, with the reason it is required. */
+.about { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); border-top: var(--bw) solid var(--border-subtle); }
+.about__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.about__head h3 { font: var(--weight-bold) var(--text-title)/var(--lh-snug) var(--font-sans); }
+.about__head p { color: var(--text-dim); font-size: var(--text-body); text-wrap: pretty; }
+
+/* The rug chapter: three answers as panels inside the card, each with a caps tag and an accent edge. */
+.voice--parts { padding: var(--space-4); gap: var(--space-4); }
+.voice__part { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5) var(--space-6); border-radius: var(--radius-md); background: var(--surface-sunken); border-left: var(--bw-selected) solid var(--accent); }
+.band:nth-of-type(even) .voice__part { background: var(--surface); }
+.voice__tag { font: var(--weight-bold) var(--text-micro)/1 var(--font-sans); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent); }
+.voice__part h3 { font: var(--weight-bold) var(--text-heading)/var(--lh-snug) var(--font-sans); margin-top: -4px; }
+@media (max-width: 760px) { .voice--parts { padding: var(--space-3); } .voice__part { padding: var(--space-4); } }

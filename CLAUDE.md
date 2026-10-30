@@ -27,7 +27,7 @@ The owner talks to you in English.
 - **The design system is a copy.** Tokens and `design/*.css` come from core; change them there and copy, never fork them here. The components in `packages/ui/src/components.tsx` are this repository's own.
 - **Shared rules go in `packages/vocab`** and the Worker validates with them.
 - **Both forms are anonymous and behind Turnstile.** Nothing is stored before siteverify passed. The waiting list is double opt-in; the form never reveals whether an address is on the list.
-- **Migrations**: a new numbered file for every change; never edit an applied one. Production holds real people's addresses: ask before anything destructive.
+- **Migrations**: nothing is deployed yet (2026-10-30), so the schema is one file, `0001_init.sql`, edited in place. From the first production deploy on: a new numbered file for every change, never edit an applied one, and ask before anything destructive, since production then holds real people's addresses.
 - **Match the surrounding code**: terse doc comments on exported functions explaining *why*; plain CSS on the design tokens, never hard-coded colours; both themes (Sun and Set) must stay high contrast. No new dependencies without a reason.
 - **One version** in the root `package.json`.
 - **CI is a gate**: never pass `--admin` to `gh pr merge`; a red check is fixed, not bypassed.

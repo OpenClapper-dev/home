@@ -1,11 +1,10 @@
 /**
- * openclapper.org: what the project is, where it comes from, who it is for, the three apps, flexibility,
- * the state of support, alpha, the maintainer, the hosted version, the plan ahead, then the two forms.
- * Every string comes from copy.ts. One centred axis: a slim sticky bar, the headline with the three app icons as its
- * picture, then the chapters as alternating full-width bands with a numbered centred title and a 660px
- * reading column (design chosen in issue #2). The sections in the owner's voice are cards.
+ * openclapper.org: the goal, why the owner does this, where the project stands, what open source means here, the plan to the alpha, the invitation to
+ * contribute, then the two forms. Every string comes from copy.ts. One centred axis: a slim sticky bar,
+ * the headline, then the chapters as alternating full-width bands with a numbered centred title and a
+ * 660px reading column (design chosen in issue #2). The sections in the owner's voice are cards.
  */
-import { Button, IconButton, LinkButton, Modal, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
+import { IconButton, LinkButton, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
 import { t } from "./copy.ts";
 import { Requests } from "./Requests.tsx";
@@ -26,11 +25,7 @@ function useConfirmed(): "yes" | "no" | null {
 /** The theme button, which every page's bar carries. */
 export function Controls() {
   const [theme, setTheme] = useTheme();
-  return (
-    <>
-      <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />
-    </>
-  );
+  return <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />;
 }
 
 /** The sticky bar: brand, the page's anchors (hidden on phones) and the controls. */
@@ -47,10 +42,10 @@ export function Top({ children }: { children?: preact.ComponentChildren }) {
 const Voice = ({ p }: { p: string[] }) => <div class="voice">{p.map((s) => <p key={s}>{s}</p>)}</div>;
 const nn = (i: number) => String(i).padStart(2, "0");
 
-function Band({ id, n, h, sub, wide, children }: { id: string; n: number; h: string; sub: string; wide?: boolean; children: preact.ComponentChildren }) {
+function Band({ id, n, h, sub, children }: { id: string; n: number; h: string; sub: string; children: preact.ComponentChildren }) {
   return (
     <section class="band" id={id}>
-      <div class={wide ? "col col--wide" : "col"}>
+      <div class="col">
         <div class="band__head">
           <span class="band__n num" aria-hidden="true">{nn(n)}</span>
           <h2>{h}</h2>
@@ -64,18 +59,14 @@ function Band({ id, n, h, sub, wide, children }: { id: string; n: number; h: str
 
 export function Page() {
   const confirmed = useConfirmed();
-  const [why, setWhy] = useState(false);
-  const apps = [
-    { icon: "studio", name: "Studio", platform: t.apps.web, desc: t.apps.studio },
-    { icon: "phone", name: "Mobile", platform: t.apps.phone, desc: t.apps.mobile },
-    { icon: "admin", name: "Admin", platform: t.apps.web, desc: t.apps.admin },
-  ];
   return (
     <>
       <Top>
         <nav class="top__nav" aria-label="Page">
-          <a href="#apps">{t.nav.apps}</a>
-          <a href="#support">{t.nav.support}</a>
+          <a href="#goal">{t.nav.goal}</a>
+          <a href="#why">{t.nav.why}</a>
+          <a href="#state">{t.nav.state}</a>
+          <a href="#rug">{t.nav.rug}</a>
           <a href="#plan">{t.nav.plan}</a>
           <a href="#ideas">{t.nav.ideas}</a>
           <a href="#waitlist">{t.nav.waitlist}</a>
@@ -89,57 +80,23 @@ export function Page() {
           <h1>{t.hero.title}</h1>
           <p class="lede">{t.hero.lede}</p>
           <div class="hero__cta">
-            <LinkButton href="#waitlist" size="lg" icon="arrow-down">{t.hero.join}</LinkButton>
-            <LinkButton href="#ideas" size="lg" kind="secondary">{t.hero.idea}</LinkButton>
+            <LinkButton href="#ideas" size="lg" icon="arrow-down">{t.hero.idea}</LinkButton>
+            <LinkButton href="#waitlist" size="lg" kind="secondary">{t.hero.join}</LinkButton>
             <LinkButton href={CORE} size="lg" kind="ghost" icon="github" rel="noopener">{t.hero.source}</LinkButton>
           </div>
-          <ul class="hero__apps" aria-hidden="true">
-            {apps.map((a) => <li key={a.icon}><img src={`/icons/${a.icon}.svg`} alt="" width="96" height="96" /></li>)}
-          </ul>
         </section>
 
-        <Band id="origin" n={1} h={t.origin.h} sub={t.origin.sub}><Voice p={t.origin.p} /></Band>
-        <Band id="for" n={2} h={t.who.h} sub={t.who.sub}><div class="prose">{t.who.p.map((s) => <p key={s}>{s}</p>)}</div></Band>
+        <Band id="goal" n={1} h={t.goal.h} sub={t.goal.sub}><div class="prose">{t.goal.p.map((s) => <p key={s}>{s}</p>)}</div></Band>
+        <Band id="why" n={2} h={t.why.h} sub={t.why.sub}><Voice p={t.why.p} /></Band>
+        <Band id="state" n={3} h={t.state.h} sub={t.state.sub}><Voice p={t.state.p} /></Band>
 
-        <Band id="apps" n={3} h={t.apps.h} sub={t.apps.sub} wide>
-          <p class="prose prose--center">{t.apps.note}</p>
-          <ul class="apps">
-            {apps.map((a) => (
-              <li class="app" key={a.icon}>
-                <img src={`/icons/${a.icon}.svg`} alt="" width="72" height="72" />
-                <h3>{a.name}</h3>
-                <span class="pill pill--later">{a.platform}</span>
-                <p>{a.desc}</p>
-              </li>
-            ))}
-          </ul>
+        <Band id="rug" n={4} h={t.rug.h} sub={t.rug.sub}>
+          <div class="voice voice--parts">
+            {t.rug.parts.map((part) => <div class="voice__part" key={part.h}><span class="voice__tag">{part.tag}</span><h3>{part.h}</h3>{part.p.map((s) => <p key={s}>{s}</p>)}</div>)}
+          </div>
         </Band>
 
-        <Band id="flex" n={4} h={t.flex.h} sub={t.flex.sub}><Voice p={t.flex.p} /></Band>
-
-        <Band id="support" n={5} h={t.support.h} sub={t.support.sub}>
-          <ul class="support">
-            <li><span class="tag">{t.support.browsersTag}</span><div><h3>{t.support.browsersH}</h3><p>{t.support.browsers}</p></div></li>
-            <li><span class="tag">{t.support.mobileTag}</span><div><h3>{t.support.mobileH}</h3><p>{t.support.mobile}</p><span class="pill pill--soon">{t.support.ios}</span></div></li>
-            <li><span class="tag">{t.support.hostTag}</span><div><h3>{t.support.hostH}</h3><p>{t.support.host}</p><span><Button kind="secondary" size="sm" onClick={() => setWhy(true)}>{t.support.why}</Button></span></div></li>
-          </ul>
-          <Modal open={why} onClose={() => setWhy(false)} title={t.support.whyTitle}>
-            <p>{t.support.whyIntro}</p>
-            <h3>GitHub</h3>
-            <p>{t.support.github}</p>
-            <h3>Cloudflare</h3>
-            <p>{t.support.cloudflare1}</p>
-            <p>{t.support.cloudflare2}</p>
-            <h3>{t.support.bothH}</h3>
-            <p>{t.support.both}</p>
-          </Modal>
-        </Band>
-
-        <Band id="alpha" n={6} h={t.alpha.h} sub={t.alpha.sub}><Voice p={t.alpha.p} /></Band>
-        <Band id="maintainer" n={7} h={t.maintainer.h} sub={t.maintainer.sub}><Voice p={t.maintainer.p} /></Band>
-        <Band id="hosted" n={8} h={t.hosted.h} sub={t.hosted.sub}><Voice p={t.hosted.p} /></Band>
-
-        <Band id="plan" n={9} h={t.plan.h} sub={t.plan.sub}>
+        <Band id="plan" n={5} h={t.plan.h} sub={t.plan.sub}>
           <ol class="steps">
             {t.plan.steps.map((s, i) => (
               <li class={i === 0 ? "step step--now" : "step"} key={s.h}>
@@ -157,12 +114,12 @@ export function Page() {
           </aside>
         </Band>
 
-        <Band id="ideas" n={10} h={t.ideas.h} sub={t.ideas.sub}>
+        <Band id="ideas" n={6} h={t.ideas.h} sub={t.ideas.sub}>
           <Voice p={[...t.ideas.p, t.ideas.language]} />
           <Requests />
         </Band>
 
-        <Band id="waitlist" n={11} h={t.waitlist.h} sub={t.waitlist.sub}>
+        <Band id="waitlist" n={7} h={t.waitlist.h} sub={t.waitlist.sub}>
           <p class="prose">{t.waitlist.p}</p>
           <Waitlist confirmed={confirmed} />
         </Band>

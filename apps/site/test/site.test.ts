@@ -63,8 +63,10 @@ beforeEach(async () => {
   await env.DB.batch([env.DB.prepare("DELETE FROM request_entries"), env.DB.prepare("DELETE FROM requests"), env.DB.prepare("DELETE FROM waitlist")]);
 });
 
-const waitlist = (over: Record<string, unknown> = {}) => ({ email: "me@example.test", platforms: ["web"], turnstile: "tok", ...over });
-const request = (over: Record<string, unknown> = {}) => ({ entries: [{ text: "Call sheets on the phone", test: true }], contact: "@me", platforms: ["android"], turnstile: "tok", ...over });
+/** The required about-you block, as both forms send it. */
+const who = { systems: ["german"], positions: ["second-ad"], years: "3-6", languages: ["german", "english"] };
+const waitlist = (over: Record<string, unknown> = {}) => ({ email: "me@example.test", platforms: ["web"], ...who, turnstile: "tok", ...over });
+const request = (over: Record<string, unknown> = {}) => ({ entries: [{ text: "Call sheets on the phone" }], ...who, turnstile: "tok", ...over });
 
 describe("turnstile", () => {
   test("no token, a failed check, a wrong action or a foreign hostname refuse before anything is stored", async () => {
@@ -97,7 +99,7 @@ describe("turnstile", () => {
 
 describe("waiting list", () => {
   test("sign-up stores an unconfirmed row and mails a link; the link confirms once", async () => {
-    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ nickname: "Ali", positions: ["dp", "gaffer"], years: 8 }) }), 200);
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ positions: ["dp", "gaffer"], years: "6-9" }) }), 200);
     expect(sent).toHaveLength(1);
     expect(sent[0].to).toBe("me@example.test");
     const link = sent[0].text.match(/https:\S+/)![0];
@@ -122,14 +124,14 @@ describe("waiting list", () => {
     await json(call(base, "POST", "/api/waitlist", { body: waitlist() }), 200);
     const link = sent[0].text.match(/https:\S+/)![0];
     await call(base, "GET", new URL(link).pathname);
-    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ nickname: "again" }) }), 200);
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ years: "12+" }) }), 200);
     expect(sent).toHaveLength(1);
 
     await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "slow@example.test" }) }), 200);
     await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "slow@example.test" }) }), 200);
     expect(sent).toHaveLength(2); // inside the resend window: no new mail, still "ok"
     await env.DB.prepare("UPDATE waitlist SET token_sent_at = ?1 WHERE email = 'slow@example.test'").bind(new Date(Date.now() - 3_600_000).toISOString()).run();
-    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "slow@example.test", nickname: "Slo" }) }), 200);
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "slow@example.test", years: "lt1" }) }), 200);
     expect(sent).toHaveLength(3);
     expect(sent[2].text).not.toContain(new URL(sent[1].text.match(/https:\S+/)![0]).pathname); // a fresh token
   });
@@ -160,15 +162,22 @@ describe("waiting list", () => {
 describe("feature requests", () => {
   beforeEach(() => { siteverify = passFor("request"); });
   test("a submission stores the person once and every entry in order", async () => {
-    const r = await json<{ id: string }>(call(base, "POST", "/api/requests", { body: request({ entries: [{ title: "Call sheets", text: "On the phone", test: true }, { text: "Weather per day", prototype: true }], positions: ["second-ad"], years: 5, contact: "@me" }) }), 201);
-    const entries = await env.DB.prepare("SELECT title, text, test, prototype FROM request_entries WHERE request_id = ?1 ORDER BY position").bind(r.id).all();
-    expect(entries.results).toEqual([{ title: "Call sheets", text: "On the phone", test: 1, prototype: 0 }, { title: null, text: "Weather per day", test: 0, prototype: 1 }]);
-    expect((await env.DB.prepare("SELECT platforms FROM requests WHERE id = ?1").bind(r.id).first<{ platforms: string }>())!.platforms).toBe('["android"]');
+    const r = await json<{ id: string }>(call(base, "POST", "/api/requests", { body: request({ entries: [{ title: "Call sheets", text: "On the phone" }, { text: "Weather per day", prototype: true }], email: "asker@example.test" }) }), 201);
+    const entries = await env.DB.prepare("SELECT title, text, prototype FROM request_entries WHERE request_id = ?1 ORDER BY position").bind(r.id).all();
+    expect(entries.results).toEqual([{ title: "Call sheets", text: "On the phone", prototype: 0 }, { title: null, text: "Weather per day", prototype: 1 }]);
+    expect((await env.DB.prepare("SELECT email, systems, years, languages FROM requests WHERE id = ?1").bind(r.id).first())).toEqual({ email: "asker@example.test", systems: '["german"]', years: "3-6", languages: '["german","english"]' });
+    // An email on a request is unverified: it never makes the site send a mail.
+    expect(sent).toHaveLength(0);
   });
-  test("asking to test needs a contact and a platform", async () => {
-    expect((await json(call(base, "POST", "/api/requests", { body: request({ contact: "" }) }), 400)).field).toBe("contact");
-    expect((await json(call(base, "POST", "/api/requests", { body: request({ platforms: [] }) }), 400)).field).toBe("platforms");
-    await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "no flags" }], contact: "", platforms: [] }) }), 201);
+  test("asking for questions needs an email; the about-you block is always required; never a mail", async () => {
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "x", prototype: true }] }) }), 400)).field).toBe("email");
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ years: undefined }) }), 400)).field).toBe("years");
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ positions: [] }) }), 400)).field).toBe("positions");
+    expect((await json(call(base, "POST", "/api/requests", { body: request({ languages: ["other"] }) }), 400)).field).toBe("other_language");
+    await json(call(base, "POST", "/api/requests", { body: request() }), 201);
+    expect(sent).toHaveLength(0);
+    await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "x", prototype: true }], email: "q@example.test" }) }), 201);
+    expect(sent).toHaveLength(0);
   });
   test("an empty entry is refused with its field", async () => {
     const r = await json(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "ok" }, { title: "only a title" }] }) }), 400);
@@ -197,17 +206,17 @@ describe("admin", () => {
   });
   test("the waiting list, its CSV of confirmed addresses, the invite mark and deletion", async () => {
     siteverify = passFor("waitlist");
-    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "a@example.test", nickname: 'Ann "A"', positions: ["dp"], system: "german" }) }), 200);
+    await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "a@example.test", positions: ["dp", "other"], other_position: 'Drone "pilot"' }) }), 200);
     await json(call(base, "POST", "/api/waitlist", { body: waitlist({ email: "b@example.test" }) }), 200);
     await call(base, "GET", new URL(sent[0].text.match(/https:\S+/)![0]).pathname);
     const t = await jwt();
     const list = await json<{ waitlist: { email: string; confirmed_at: string | null; positions: string[]; platforms: string[]; tester: boolean; updates: boolean; id: string }[] }>(call(base, "GET", "/admin/api/waitlist", { jwt: t }), 200);
     expect(list.waitlist.map((w) => [w.email, !!w.confirmed_at])).toEqual([["b@example.test", false], ["a@example.test", true]]);
-    expect(list.waitlist[1].positions).toEqual(["dp"]);
+    expect(list.waitlist[1].positions).toEqual(["dp", "other"]);
     expect([list.waitlist[1].platforms, list.waitlist[1].tester, list.waitlist[1].updates]).toEqual([["web"], true, false]);
     const csv = await (await call(base, "GET", "/admin/api/waitlist.csv", { jwt: t })).text();
-    expect(csv.split("\n")[0]).toBe("email,nickname,tester,updates,platforms,system,positions,other_position,years,confirmed_at,invited_at");
-    expect(csv.split("\n")[1].startsWith('a@example.test,"Ann ""A""",1,0,web,german,dp,,,')).toBe(true);
+    expect(csv.split("\n")[0]).toBe("email,tester,updates,platforms,systems,positions,other_position,years,languages,other_language,confirmed_at,invited_at");
+    expect(csv.split("\n")[1].startsWith('a@example.test,1,0,web,german,dp other,"Drone ""pilot""",3-6,german english,,')).toBe(true);
     expect(csv).not.toContain("b@example.test");
     const a = list.waitlist[1].id;
     await json(call(base, "PATCH", `/admin/api/waitlist/${a}`, { jwt: t, body: { invited: true } }), 200);
@@ -217,7 +226,7 @@ describe("admin", () => {
   });
   test("requests with their entries, a status, and deletion that takes the entries along", async () => {
     siteverify = passFor("request");
-    const { id } = await json<{ id: string }>(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "one" }, { text: "two", prototype: true }] }) }), 201);
+    const { id } = await json<{ id: string }>(call(base, "POST", "/api/requests", { body: request({ entries: [{ text: "one" }, { text: "two", prototype: true }], email: "me@example.test" }) }), 201);
     const t = await jwt();
     const list = await json<{ requests: { id: string; status: string; entries: { text: string; prototype: boolean }[] }[] }>(call(base, "GET", "/admin/api/requests", { jwt: t }), 200);
     expect(list.requests[0].id).toBe(id);

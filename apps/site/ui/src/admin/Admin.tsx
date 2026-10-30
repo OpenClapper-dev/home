@@ -1,11 +1,11 @@
 /** The owner's view (apps/site/src/admin.ts): the waiting list and every feature request. Behind Cloudflare Access. */
-import { DEPARTMENT_LABEL, departmentsOf, PLATFORM_LABEL, positionById, SYSTEM_LABEL, type FilmSystem, type Platform } from "@openclapper/home-vocab";
+import { DEPARTMENT_LABEL, departmentsOf, LANGUAGE_LABEL, PLATFORM_LABEL, positionById, SYSTEM_LABEL, YEARS_LABEL, type FilmSystem, type Language, type Platform, type YearsBand } from "@openclapper/home-vocab";
 import { Banner, Button, IconButton, Spinner, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
 
-interface Wait { id: string; email: string; nickname: string | null; tester: boolean; updates: boolean; platforms: Platform[]; system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
-interface Entry { id: string; title: string | null; text: string; test: boolean; prototype: boolean }
-interface Req { id: string; created_at: string; system: FilmSystem | null; positions: string[]; platforms: Platform[]; other_position: string | null; years: number | null; contact: string | null; status: "new" | "seen" | "done"; entries: Entry[] }
+interface Wait { id: string; email: string; tester: boolean; updates: boolean; platforms: Platform[]; systems: FilmSystem[]; positions: string[]; other_position: string | null; years: YearsBand; languages: Language[]; other_language: string | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
+interface Entry { id: string; title: string | null; text: string; prototype: boolean }
+interface Req { id: string; created_at: string; email: string | null; systems: FilmSystem[]; positions: string[]; other_position: string | null; years: YearsBand; languages: Language[]; other_language: string | null; status: "new" | "seen" | "done"; entries: Entry[] }
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(path, { ...init, credentials: "same-origin", headers: { accept: "application/json", ...(init.body ? { "content-type": "application/json" } : {}) } });
@@ -18,11 +18,12 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 const send = (method: string, path: string, body?: unknown) => api<unknown>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "");
-const who = (p: { system: FilmSystem | null; positions: string[]; other_position: string | null; years: number | null; platforms: Platform[] }) => {
+const who = (p: { systems: FilmSystem[]; positions: string[]; other_position: string | null; years: YearsBand; languages: Language[]; other_language: string | null; platforms?: Platform[] }) => {
   const parts = p.positions.map((id) => (id === "other" && p.other_position ? `Other: ${p.other_position}` : positionById(id)?.label ?? id));
   const depts = departmentsOf(p.positions).map((d) => DEPARTMENT_LABEL[d]);
-  const platforms = p.platforms.map((x) => PLATFORM_LABEL[x].replace(/ \(.*\)$/, "")).join("/");
-  return [p.system ? SYSTEM_LABEL[p.system] : "", parts.join(", "), depts.length ? `(${depts.join(", ")})` : "", p.years !== null ? `${p.years} yrs` : "", platforms].filter(Boolean).join(" · ") || "no details";
+  const languages = p.languages.map((l) => (l === "other" && p.other_language ? p.other_language : LANGUAGE_LABEL[l])).join("/");
+  const platforms = (p.platforms ?? []).map((x) => PLATFORM_LABEL[x]).join("/");
+  return [p.systems.map((s) => SYSTEM_LABEL[s]).join("/"), parts.join(", "), depts.length ? `(${depts.join(", ")})` : "", `${YEARS_LABEL[p.years]} yrs`, languages, platforms].filter(Boolean).join(" · ") || "no details";
 };
 
 type Tab = "requests" | "waitlist";
@@ -65,7 +66,7 @@ export function Admin() {
         <div class="admin__tiles">
           <div class="tile"><span class="tile__label">Requests</span><span class="tile__value num">{reqs.length}</span><span class="meta">{fresh.length} new · {reqs.reduce((n, r) => n + r.entries.length, 0)} entries</span></div>
           <div class="tile"><span class="tile__label">Testers confirmed</span><span class="tile__value num">{confirmed.filter((w) => w.tester).length}</span><span class="meta">{wait.length - confirmed.length} pending · {confirmed.filter((w) => w.invited_at).length} invited · {confirmed.filter((w) => w.updates).length} on the Call Sheet</span></div>
-          <div class="tile"><span class="tile__label">Would test</span><span class="tile__value num">{reqs.flatMap((r) => r.entries).filter((e) => e.test).length}</span><span class="meta">{reqs.flatMap((r) => r.entries).filter((e) => e.prototype).length} would help shape</span></div>
+          <div class="tile"><span class="tile__label">Would answer questions</span><span class="tile__value num">{reqs.flatMap((r) => r.entries).filter((e) => e.prototype).length}</span><span class="meta">entries with a contact behind them</span></div>
         </div>
       )}
       {tab === "requests" && reqs && (
@@ -87,10 +88,10 @@ export function Admin() {
                 <div class="req__entry" key={e.id}>
                   {e.title && <span class="req__title">{e.title}</span>}
                   <span class="req__text">{e.text}</span>
-                  {(e.test || e.prototype) && <span class="req__flags">{e.test && <span class="pill pill--ok">would test</span>}{e.prototype && <span class="pill pill--soon">would help shape</span>}</span>}
+                  {e.prototype && <span class="req__flags"><span class="pill pill--soon">would answer questions</span></span>}
                 </div>
               ))}
-              {r.contact && <div class="req__contact"><span class="meta">Contact · </span>{r.contact}</div>}
+              {r.email && <div class="req__contact"><span class="meta">Email · </span>{r.email}</div>}
             </article>
           ))}
         </section>
@@ -100,13 +101,12 @@ export function Admin() {
           <div class="sec-box__head">Waiting list<span class="grow" /><a class="f-btn f-btn--secondary f-btn--sm" href="/admin/api/waitlist.csv" download>CSV of confirmed</a></div>
           <div class="scroll">
             <table class="tbl">
-              <thead><tr><th>Email</th><th>Name</th><th>For</th><th>About</th><th>Signed up</th><th>Confirmed</th><th>Invited</th><th /></tr></thead>
+              <thead><tr><th>Email</th><th>For</th><th>About</th><th>Signed up</th><th>Confirmed</th><th>Invited</th><th /></tr></thead>
               <tbody>
-                {wait.length === 0 && <tr><td colSpan={8} class="meta">Nothing yet.</td></tr>}
+                {wait.length === 0 && <tr><td colSpan={7} class="meta">Nothing yet.</td></tr>}
                 {wait.map((w) => (
                   <tr key={w.id}>
                     <td>{w.email}</td>
-                    <td>{w.nickname ?? ""}</td>
                     <td class="req__flags">{w.tester && <span class="pill pill--ok">tester</span>}{w.updates && <span class="pill pill--soon">Call Sheet</span>}</td>
                     <td class="meta">{who(w)}</td>
                     <td class="num meta">{when(w.created_at)}</td>

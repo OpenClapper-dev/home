@@ -6,15 +6,18 @@ A 400 names the field (`{ error, field }`) and the page shows it under that fiel
 
 ## About you (both forms)
 
-Optional in both: the **film system** worked in (German, US / International, Other), **positions** (many, from `packages/vocab/src/positions.ts`, grouped by department,
-with a filter that also hits the German titles; "Other" opens a free text), and **years in the industry**
-(one number, across every position). Departments are derived from the positions, never asked.
+Required on both forms, no name anywhere: the **film systems** worked in (many: German, US / International,
+Other), **positions** (many, from `packages/vocab/src/positions.ts`, grouped by department, with a filter
+that also hits the German titles; "Other" requires a free text), **years in the industry** as a band
+(`lt1`, `1-3`, `3-6`, `6-9`, `9-12`, `12+`), and the **languages** to test or answer questions in (many:
+German, English, Other; "Other" requires the language). Departments are derived from the positions, never asked.
+The owner needs all of it to see which direction input comes from and to pick a varied group of testers.
 
 ## Sign-up: the tester waiting list and the Call Sheet
 
-One form, one table (`waitlist`). Fields: **email** (required); **what for** (`tester`, the default, and/or
-`updates`, the Call Sheet: a mail whenever the roadmap moves a step; at least one); for testers the
-**platforms** they could test on (`web`, `android`, `ios`; at least one); first name or nickname; about you.
+One form, one table (`waitlist`). Fields: **email**; **what for** (`tester`, the default, and/or `updates`,
+the Call Sheet: a mail whenever the plan moves a step; at least one); for testers the **platforms** they
+could test on (`web`, `android`, `ios`; at least one); about you. All required.
 
 Double opt-in: the Worker stores the row unconfirmed with a 48-hex token and sends the confirmation
 link (`/api/waitlist/confirm/<token>`) through Cloudflare Email Service. The link confirms once, clears
@@ -29,10 +32,11 @@ The admin view marks confirmed rows as invited and exports the confirmed ones as
 
 ## Feature requests
 
-One submission carries one or many **entries**: optional title, required text, and per entry "I would
-test this once it exists" and "ask me questions while it takes shape". Then once per submission: **how
-to reach you** as free text (an email, a handle; required once an entry asks to test or to be contacted),
-**platforms** (required once an entry asks to test), and about you.
+One submission carries one or many **entries**: optional title, required text, and per entry "ask me
+questions while it takes shape". Then once per submission: about you (required), and an **email**,
+optional, required once an entry asks for questions. No mail goes to it (it is unverified, and an
+automatic mail would let anyone make the site write to any address). Without an email the submission
+is anonymous.
 
 Stored as one `requests` row and one `request_entries` row per entry, in order. The admin view shows
 them per submission with a status (new / seen / done).

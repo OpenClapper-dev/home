@@ -8,9 +8,9 @@ import type { Ctx } from "./index.ts";
 
 export const STATUSES = ["new", "seen", "done"] as const;
 
-interface WaitlistRow { id: string; email: string; nickname: string | null; system: string | null; positions: string; tester: number; updates: number; platforms: string; other_position: string | null; years: number | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
-interface RequestRow { id: string; created_at: string; system: string | null; positions: string; platforms: string; other_position: string | null; years: number | null; contact: string | null; status: string }
-interface EntryRow { id: string; request_id: string; position: number; title: string | null; text: string; test: number; prototype: number }
+interface WaitlistRow { id: string; email: string; systems: string; positions: string; tester: number; updates: number; platforms: string; other_position: string | null; years: string; languages: string; other_language: string | null; created_at: string; confirmed_at: string | null; invited_at: string | null }
+interface RequestRow { id: string; created_at: string; email: string | null; systems: string; positions: string; other_position: string | null; years: string; languages: string; other_language: string | null; status: string }
+interface EntryRow { id: string; request_id: string; position: number; title: string | null; text: string; prototype: number }
 
 const csvCell = (v: string | number | null) => { const s = v === null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
@@ -18,15 +18,16 @@ export function registerAdmin(router: Router<Ctx>) {
   router.on("GET", "/admin/api/whoami", async ({ admin }) => json({ email: admin }));
 
   router.on("GET", "/admin/api/waitlist", async ({ env }) => {
-    const { results } = await env.DB.prepare("SELECT id, email, nickname, system, positions, other_position, years, created_at, confirmed_at, invited_at, tester, updates, platforms FROM waitlist ORDER BY created_at DESC").all<WaitlistRow>();
-    return json({ waitlist: results.map((r) => ({ ...r, positions: JSON.parse(r.positions) as string[], platforms: JSON.parse(r.platforms) as string[], tester: r.tester === 1, updates: r.updates === 1 })) });
+    const { results } = await env.DB.prepare("SELECT id, email, tester, updates, platforms, systems, positions, other_position, years, languages, other_language, created_at, confirmed_at, invited_at FROM waitlist ORDER BY created_at DESC").all<WaitlistRow>();
+    return json({ waitlist: results.map((r) => ({ ...r, systems: JSON.parse(r.systems) as string[], positions: JSON.parse(r.positions) as string[], languages: JSON.parse(r.languages) as string[], platforms: JSON.parse(r.platforms) as string[], tester: r.tester === 1, updates: r.updates === 1 })) });
   });
 
   /** The confirmed addresses, for an invite round or a Call Sheet mail: what they signed up for, platforms, who they are. */
   router.on("GET", "/admin/api/waitlist.csv", async ({ env }) => {
-    const { results } = await env.DB.prepare("SELECT email, nickname, tester, updates, platforms, system, positions, other_position, years, confirmed_at, invited_at FROM waitlist WHERE confirmed_at IS NOT NULL ORDER BY confirmed_at").all<WaitlistRow>();
-    const lines = ["email,nickname,tester,updates,platforms,system,positions,other_position,years,confirmed_at,invited_at", ...results.map((r) =>
-      [r.email, r.nickname, r.tester, r.updates, (JSON.parse(r.platforms) as string[]).join(" "), r.system, (JSON.parse(r.positions) as string[]).join(" "), r.other_position, r.years, r.confirmed_at, r.invited_at].map(csvCell).join(","))];
+    const { results } = await env.DB.prepare("SELECT email, tester, updates, platforms, systems, positions, other_position, years, languages, other_language, confirmed_at, invited_at FROM waitlist WHERE confirmed_at IS NOT NULL ORDER BY confirmed_at").all<WaitlistRow>();
+    const list = (s: string) => (JSON.parse(s) as string[]).join(" ");
+    const lines = ["email,tester,updates,platforms,systems,positions,other_position,years,languages,other_language,confirmed_at,invited_at", ...results.map((r) =>
+      [r.email, r.tester, r.updates, list(r.platforms), list(r.systems), list(r.positions), r.other_position, r.years, list(r.languages), r.other_language, r.confirmed_at, r.invited_at].map(csvCell).join(","))];
     return new Response(`${lines.join("\n")}\n`, { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="openclapper-waitlist.csv"', "cache-control": "no-store" } });
   });
 
@@ -45,8 +46,8 @@ export function registerAdmin(router: Router<Ctx>) {
 
   router.on("GET", "/admin/api/requests", async ({ env }) => {
     const [reqs, entries] = await env.DB.batch([
-      env.DB.prepare("SELECT id, created_at, system, positions, platforms, other_position, years, contact, status FROM requests ORDER BY created_at DESC"),
-      env.DB.prepare("SELECT id, request_id, position, title, text, test, prototype FROM request_entries ORDER BY request_id, position"),
+      env.DB.prepare("SELECT id, created_at, email, systems, positions, other_position, years, languages, other_language, status FROM requests ORDER BY created_at DESC"),
+      env.DB.prepare("SELECT id, request_id, position, title, text, prototype FROM request_entries ORDER BY request_id, position"),
     ]);
     const byRequest = new Map<string, EntryRow[]>();
     for (const e of entries.results as EntryRow[]) {
@@ -57,9 +58,10 @@ export function registerAdmin(router: Router<Ctx>) {
     return json({
       requests: (reqs.results as RequestRow[]).map((r) => ({
         ...r,
+        systems: JSON.parse(r.systems) as string[],
         positions: JSON.parse(r.positions) as string[],
-        platforms: JSON.parse(r.platforms) as string[],
-        entries: (byRequest.get(r.id) ?? []).map((e) => ({ id: e.id, title: e.title, text: e.text, test: e.test === 1, prototype: e.prototype === 1 })),
+        languages: JSON.parse(r.languages) as string[],
+        entries: (byRequest.get(r.id) ?? []).map((e) => ({ id: e.id, title: e.title, text: e.text, prototype: e.prototype === 1 })),
       })),
     });
   });

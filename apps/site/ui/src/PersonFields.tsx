@@ -1,40 +1,39 @@
 /**
- * The optional "about you" block both forms share, folded behind one button: the film system,
- * positions (many), what "other" means, years in the industry. The position list itself opens on
- * demand too; the picked ones always show.
+ * The "about you" block both forms share, all of it required: the film systems (many), positions
+ * (many, "other" named), years in the industry (a band), the languages to test or answer questions in
+ * (many, "other" named). The position list opens on demand; the picked ones always show.
  */
-import { DEPARTMENT_LABEL, DEPARTMENTS, LIMITS, PLATFORM_LABEL, PLATFORMS, positionById, searchPositions, SYSTEMS, type FilmSystem, type Platform } from "@openclapper/home-vocab";
+import { DEPARTMENT_LABEL, DEPARTMENTS, LANGUAGE_LABEL, LANGUAGES, LIMITS, PLATFORM_LABEL, PLATFORMS, positionById, searchPositions, SYSTEM_LABEL, SYSTEMS, YEARS, YEARS_LABEL, type FilmSystem, type Language, type Platform, type YearsBand } from "@openclapper/home-vocab";
 import { Button, Chip, Field, Icon, Input } from "@openclapper/home-ui";
-import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import { t } from "./copy.ts";
 
-export interface PersonState { system: FilmSystem | ""; positions: string[]; other_position: string; years: string }
-export const emptyPerson = (): PersonState => ({ system: "", positions: [], other_position: "", years: "" });
-export const personIsEmpty = (p: PersonState) => !p.system && p.positions.length === 0 && !p.other_position && !p.years;
+export interface PersonState { systems: FilmSystem[]; positions: string[]; other_position: string; years: YearsBand | ""; languages: Language[]; other_language: string }
+export const emptyPerson = (): PersonState => ({ systems: [], positions: [], other_position: "", years: "", languages: [], other_language: "" });
+export const personIsEmpty = (p: PersonState) => p.systems.length === 0 && p.positions.length === 0 && !p.other_position && !p.years && p.languages.length === 0 && !p.other_language;
 /** What the API takes (packages/vocab parses it strictly). */
-export const personBody = (p: PersonState) => ({ system: p.system || null, positions: p.positions, other_position: p.other_position || null, years: p.years === "" ? null : Number(p.years) });
+export const personBody = (p: PersonState) => ({ systems: p.systems, positions: p.positions, other_position: p.other_position || null, years: p.years || null, languages: p.languages, other_language: p.other_language || null });
 
-/** Which platforms the person could test on: chips, many; required where the form says so. */
-export function Platforms({ value, onChange, required, error }: { value: Platform[]; onChange: (v: Platform[]) => void; required?: boolean; error?: string }) {
-  const f = t.form;
-  const toggle = (p: Platform) => onChange(value.includes(p) ? value.filter((x) => x !== p) : [...value, p]);
+const toggled = <T,>(list: T[], x: T) => (list.includes(x) ? list.filter((y) => y !== x) : [...list, x]);
+
+/** The block's heading with the reason it is required; the request form adds the anonymity note. */
+export function AboutHead({ why, anon }: { why: string; anon?: boolean }) {
   return (
-    <Field label={f.platforms} help={f.platformsHelp} required={required} error={error} optional={f.optional}>
-      {(id) => <div class="f-chips" id={id} role="group" aria-label={f.platformsAria}>{PLATFORMS.map((p) => <Chip key={p} selected={value.includes(p)} onClick={() => toggle(p)}>{PLATFORM_LABEL[p]}</Chip>)}</div>}
-    </Field>
+    <div class="about__head">
+      <h3>{t.form.aboutH}</h3>
+      <p>{why}</p>
+      {anon && <p>{t.form.aboutAnon}</p>}
+    </div>
   );
 }
 
-/** A block that opens on a click and stays open once it holds something (a restored draft, an error). */
-export function Disclose({ label, open: forced, children }: { label: string; open?: boolean; children: ComponentChildren }) {
-  const [open, setOpen] = useState(false);
-  const shown = open || !!forced;
+/** Which platforms the person could test on: chips, many; required where the form says so. */
+export function Platforms({ value, onChange, error }: { value: Platform[]; onChange: (v: Platform[]) => void; error?: string }) {
+  const f = t.form;
   return (
-    <div class="disclose">
-      <div><Button kind="secondary" icon={shown ? "minus" : "plus"} aria-expanded={shown} onClick={() => setOpen(!shown)}>{label}</Button></div>
-      {shown && <div class="disclose__body">{children}</div>}
-    </div>
+    <Field label={f.platforms} help={f.platformsHelp} required error={error}>
+      {(id) => <div class="f-chips" id={id} role="group" aria-label={f.platformsAria}>{PLATFORMS.map((p) => <Chip key={p} selected={value.includes(p)} onClick={() => onChange(toggled(value, p))}>{PLATFORM_LABEL[p]}</Chip>)}</div>}
+    </Field>
   );
 }
 
@@ -42,24 +41,20 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
   const f = t.form;
   const [q, setQ] = useState("");
   const [listOpen, setListOpen] = useState(false);
-  const toggle = (id: string) => onChange({ ...value, positions: value.positions.includes(id) ? value.positions.filter((p) => p !== id) : [...value.positions, id] });
+  const togglePosition = (id: string) => onChange({ ...value, positions: toggled(value.positions, id) });
   const hits = searchPositions(q);
   const grouped = DEPARTMENTS.map((d) => ({ d, items: hits.filter((p) => p.department === d) })).filter((g) => g.items.length);
   const showList = listOpen || q.length > 0;
   return (
     <>
-      <Field label={f.system} help={f.systemHelp} error={errors.system} optional={f.optional}>
-        {(id) => (
-          <div class="f-seg" role="radiogroup" id={id} aria-label={f.systemAria}>
-            {SYSTEMS.map((s) => <button type="button" class="f-seg__opt" role="radio" aria-checked={value.system === s} key={s} onClick={() => onChange({ ...value, system: value.system === s ? "" : s })}>{f.systems[s]}</button>)}
-          </div>
-        )}
+      <Field label={f.systems} help={f.systemsHelp} error={errors.systems} required>
+        {(id) => <div class="f-chips" id={id} role="group" aria-label={f.systemsAria}>{SYSTEMS.map((s) => <Chip key={s} selected={value.systems.includes(s)} onClick={() => onChange({ ...value, systems: toggled(value.systems, s) })}>{SYSTEM_LABEL[s]}</Chip>)}</div>}
       </Field>
-      <Field label={f.positions} help={f.positionsHelp} error={errors.positions} optional={f.optional}>
+      <Field label={f.positions} help={f.positionsHelp} error={errors.positions} required>
         {(id, invalid) => (
           <div class="positions">
             <div class="positions__picked">
-              {value.positions.map((p) => <Chip key={p} selected onClick={() => toggle(p)} aria-label={f.remove(positionById(p)?.label ?? p)}>{positionById(p)?.label ?? p}<Icon name="close" /></Chip>)}
+              {value.positions.map((p) => <Chip key={p} selected onClick={() => togglePosition(p)} aria-label={f.remove(positionById(p)?.label ?? p)}>{positionById(p)?.label ?? p}<Icon name="close" /></Chip>)}
               <Button kind="secondary" size="sm" icon={showList ? "minus" : "plus"} aria-expanded={showList} onClick={() => { setListOpen(!showList); setQ(""); }}>{showList ? f.closeList : value.positions.length ? f.add : f.pick}</Button>
             </div>
             {showList && (
@@ -70,7 +65,7 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
                   {grouped.map(({ d, items }) => (
                     <div class="positions__group" key={d}>
                       <span class="positions__dept">{DEPARTMENT_LABEL[d]}</span>
-                      <div class="f-chips">{items.map((p) => <Chip key={p.id} selected={value.positions.includes(p.id)} onClick={() => toggle(p.id)} disabled={!value.positions.includes(p.id) && value.positions.length >= LIMITS.positions}>{p.label}</Chip>)}</div>
+                      <div class="f-chips">{items.map((p) => <Chip key={p.id} selected={value.positions.includes(p.id)} onClick={() => togglePosition(p.id)} disabled={!value.positions.includes(p.id) && value.positions.length >= LIMITS.positions}>{p.label}</Chip>)}</div>
                     </div>
                   ))}
                 </div>
@@ -79,16 +74,26 @@ export function PersonFields({ value, onChange, errors }: { value: PersonState; 
           </div>
         )}
       </Field>
-      <div class="form__row">
-        {value.positions.includes("other") && (
-          <Field label={f.other} error={errors.other_position} optional={f.optional}>
-            {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.otherPosition} value={value.other_position} onInput={(e) => onChange({ ...value, other_position: e.currentTarget.value })} placeholder={f.otherPh} />}
-          </Field>
-        )}
-        <Field label={f.years} help={f.yearsHelp} error={errors.years} optional={f.optional}>
-          {(id, invalid) => <Input id={id} invalid={invalid} type="number" inputMode="numeric" min={0} max={LIMITS.years} step={1} value={value.years} onInput={(e) => onChange({ ...value, years: e.currentTarget.value })} style={{ maxWidth: 140 }} />}
+      {value.positions.includes("other") && (
+        <Field label={f.other} error={errors.other_position} required>
+          {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.otherPosition} value={value.other_position} onInput={(e) => onChange({ ...value, other_position: e.currentTarget.value })} placeholder={f.otherPh} />}
         </Field>
-      </div>
+      )}
+      <Field label={f.years} help={f.yearsHelp} error={errors.years} required>
+        {(id) => (
+          <div class="f-seg" role="radiogroup" id={id} aria-label={f.yearsAria}>
+            {YEARS.map((y) => <button type="button" class="f-seg__opt" role="radio" aria-checked={value.years === y} key={y} onClick={() => onChange({ ...value, years: y })}>{YEARS_LABEL[y]}</button>)}
+          </div>
+        )}
+      </Field>
+      <Field label={f.languages} help={f.languagesHelp} error={errors.languages} required>
+        {(id) => <div class="f-chips" id={id} role="group" aria-label={f.languagesAria}>{LANGUAGES.map((l) => <Chip key={l} selected={value.languages.includes(l)} onClick={() => onChange({ ...value, languages: toggled(value.languages, l) })}>{LANGUAGE_LABEL[l]}</Chip>)}</div>}
+      </Field>
+      {value.languages.includes("other") && (
+        <Field label={f.otherLanguage} error={errors.other_language} required>
+          {(id, invalid) => <Input id={id} invalid={invalid} maxLength={LIMITS.otherLanguage} value={value.other_language} onInput={(e) => onChange({ ...value, other_language: e.currentTarget.value })} placeholder={f.otherLanguagePh} />}
+        </Field>
+      )}
     </>
   );
 }

@@ -7,9 +7,9 @@ by `apps/site/test/site.test.ts`, which also fails when a route is added without
 
 | Route | Body | Answer |
 | --- | --- | --- |
-| `POST /api/waitlist` | `{ email, tester?: boolean (default true), updates?: boolean, platforms?: ("web" \| "android" \| "ios")[] (required when tester), nickname?, system?, positions?: string[], other_position?, years?, turnstile }` | `200 { ok: true }` always (see forms.md); `400` field error; `403` bot check failed; `502` mail failed |
+| `POST /api/waitlist` | `{ email, tester?: boolean (default true), updates?: boolean, platforms?: ("web" \| "android" \| "ios")[] (required when tester), systems: string[], positions: string[], other_position? (required with "other"), years: "lt1" \| "1-3" \| "3-6" \| "6-9" \| "9-12" \| "12+", languages: string[], other_language? (required with "other"), turnstile }` | `200 { ok: true }` always (see forms.md); `400` field error; `403` bot check failed; `502` mail failed |
 | `GET /api/waitlist/confirm/:token` | | `303` to `/?confirmed=yes#waitlist` or `/?confirmed=no#waitlist` |
-| `POST /api/requests` | `{ entries: [{ title?, text, test?, prototype? }], contact? (required when an entry has test or prototype), platforms? (required when an entry has test), system?, positions?, other_position?, years?, turnstile }` | `201 { ok: true, id }`; `400`; `403` |
+| `POST /api/requests` | `{ entries: [{ title?, text, prototype? }], email? (required when an entry has prototype; no mail is sent to it), systems, positions, other_position?, years, languages, other_language?, turnstile }` | `201 { ok: true, id }`; `400`; `403` |
 
 Bodies over 256 KB answer `413`; a content type other than `application/json` answers `415`.
 
@@ -18,8 +18,8 @@ Bodies over 256 KB answer `413`; a content type other than `application/json` an
 | Route | What |
 | --- | --- |
 | `GET /admin/api/whoami` | `{ email }` of the operator |
-| `GET /admin/api/waitlist` | every row, newest first, positions and platforms as lists, `tester` and `updates` as booleans |
-| `GET /admin/api/waitlist.csv` | the confirmed rows as CSV (email, nickname, tester, updates, platforms, system, positions, other_position, years, confirmed_at, invited_at) |
+| `GET /admin/api/waitlist` | every row, newest first, the lists as lists, `tester` and `updates` as booleans |
+| `GET /admin/api/waitlist.csv` | the confirmed rows as CSV (email, tester, updates, platforms, systems, positions, other_position, years, languages, other_language, confirmed_at, invited_at) |
 | `PATCH /admin/api/waitlist/:id` | `{ invited: boolean }` |
 | `DELETE /admin/api/waitlist/:id` | |
 | `GET /admin/api/requests` | every submission with its entries |
