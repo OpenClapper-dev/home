@@ -160,7 +160,7 @@ const de: Dict = {
   nav: { goal: "Das Ziel", why: "Warum", state: "Wo es steht", rug: "Der Teppich", plan: "Der Plan", ideas: "Mitmachen", waitlist: "Eintragen", lang: "English", langTitle: "Read in English" },
   hero: {
     status: "Experimentell · Open Source · selbst gehostet",
-    title: "Ein Open-Source-Weg, Filmproduktionen zu organisieren, gebaut zusammen mit den Leuten, die den Job machen.",
+    title: "Ein Open-Source-Weg, Filmproduk\u00ADtionen zu organisieren, gebaut zusammen mit den Leuten, die den Job machen.",
     lede: "OpenClapper ist ein Projekt für ein flexibles, selbst hostbares Werkzeugset für Vorbereitung und Dreh, für jede Art von Produktion, jedes Department. Es beginnt hier: mit eurer Erfahrung, vor der ersten Alpha.",
     idea: "Sag mir, was du brauchst", join: "Als Tester eintragen", source: "Quellcode",
   },
