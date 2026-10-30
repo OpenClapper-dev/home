@@ -16,7 +16,7 @@ The owner talks to you in English.
 | Path | What |
 | --- | --- |
 | `apps/site/src` | The Worker: `index.ts` (entry, Access on `/admin`), `forms.ts` (the two forms + the confirmation link), `admin.ts`, `turnstile.ts`, `mail.ts`, `access.ts` + `http.ts` (copied from core's service-kit) |
-| `apps/site/ui` | The pages (Vite, Preact): `index.html` + `src/Page.tsx`, `src/copy.ts` (every string, English only), `src/Waitlist.tsx`, `src/Requests.tsx`, `src/PersonFields.tsx`, `src/drafts.ts`, `src/turnstile.ts`; `admin/` + `src/admin/`; `privacy.html`; `public/_headers` (CSP) |
+| `apps/site/ui` | The pages (Vite, Preact): `index.html` + `src/Page.tsx`, `src/copy.ts` (every string, English and German), `src/Waitlist.tsx`, `src/Requests.tsx`, `src/PersonFields.tsx`, `src/drafts.ts`, `src/turnstile.ts`; `admin/` + `src/admin/`; `privacy.html`; `public/_headers` (CSP) |
 | `apps/site/migrations` | D1 schema, numbered, additive |
 | `apps/site/test` | Route tests (vitest + the Cloudflare plugin, in workerd) |
 | `packages/vocab` | Positions by department and the submission parsers: what the page and the Worker must agree on |

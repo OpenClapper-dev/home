@@ -4,9 +4,9 @@
  * the headline, then the chapters as alternating full-width bands with a numbered centred title and a
  * 660px reading column (design chosen in issue #2). The sections in the owner's voice are cards.
  */
-import { IconButton, LinkButton, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
+import { Button, IconButton, LinkButton, THEME_CYCLE, THEME_ICON, THEME_LABEL, useTheme } from "@openclapper/home-ui";
 import { useEffect, useState } from "preact/hooks";
-import { t } from "./copy.ts";
+import { useT } from "./copy.ts";
 import { Requests } from "./Requests.tsx";
 import { Waitlist } from "./Waitlist.tsx";
 
@@ -22,10 +22,16 @@ function useConfirmed(): "yes" | "no" | null {
   return state;
 }
 
-/** The theme button, which every page's bar carries. */
+/** Language and theme: the two buttons every page's bar carries. */
 export function Controls() {
   const [theme, setTheme] = useTheme();
-  return <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />;
+  const [t, lang, setLang] = useT();
+  return (
+    <>
+      <Button kind="ghost" size="sm" icon="translate" title={t.nav.langTitle} aria-label={t.nav.langTitle} lang={lang === "en" ? "de" : "en"} onClick={() => setLang(lang === "en" ? "de" : "en")}>{t.nav.lang}</Button>
+      <IconButton icon={THEME_ICON[theme]} label={THEME_LABEL[theme]} onClick={() => setTheme(THEME_CYCLE[theme])} />
+    </>
+  );
 }
 
 /** The sticky bar: brand, the page's anchors (hidden on phones) and the controls. */
@@ -58,6 +64,7 @@ function Band({ id, n, h, sub, children }: { id: string; n: number; h: string; s
 }
 
 export function Page() {
+  const [t] = useT();
   const confirmed = useConfirmed();
   return (
     <>

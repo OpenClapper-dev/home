@@ -8,7 +8,7 @@ import { LIMITS } from "@openclapper/home-vocab";
 import { Banner, Button, Check, Field, IconButton, Input, Textarea } from "@openclapper/home-ui";
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
-import { t } from "./copy.ts";
+import { useT } from "./copy.ts";
 import { useDraft } from "./drafts.ts";
 import { AboutHead, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
@@ -20,6 +20,7 @@ const empty = (): State => ({ entries: [emptyEntry()], person: emptyPerson(), em
 const isEmpty = (s: State) => s.entries.every((e) => !e.title && !e.text && !e.prototype) && personIsEmpty(s.person) && !s.email;
 
 export function Requests() {
+  const [t] = useT();
   const r = t.rq;
   const [s, set, draft] = useDraft<State>("draft:requests", empty, isEmpty);
   const [errors, setErrors] = useState<Record<string, string>>({});
