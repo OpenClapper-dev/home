@@ -7,7 +7,7 @@ import { LIMITS, type Platform } from "@openclapper/home-vocab";
 import { Banner, Button, Check, Field, Input } from "@openclapper/home-ui";
 import { useState } from "preact/hooks";
 import { ApiError, post } from "./api.ts";
-import { t } from "./copy.ts";
+import { useT } from "./copy.ts";
 import { useDraft } from "./drafts.ts";
 import { AboutHead, emptyPerson, PersonFields, personBody, personIsEmpty, type PersonState, Platforms } from "./PersonFields.tsx";
 import { useTurnstile } from "./turnstile.ts";
@@ -17,6 +17,7 @@ const empty = (): State => ({ email: "", tester: true, updates: false, platforms
 const isEmpty = (s: State) => !s.email && s.tester && !s.updates && s.platforms.length === 0 && personIsEmpty(s.person);
 
 export function Waitlist({ confirmed }: { confirmed: "yes" | "no" | null }) {
+  const [t] = useT();
   const [s, set, draft] = useDraft<State>("draft:waitlist", empty, isEmpty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);

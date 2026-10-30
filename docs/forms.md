@@ -56,8 +56,11 @@ siteverify, checks the action and that the hostname is the site's own (`SITE_URL
 itself: the page resets the widget after every submission. Locally and in CI the page uses Cloudflare's
 visible test site key and `.dev.vars` the matching test secret, which always pass.
 
-## Language
+## Languages
 
-Everything is English (`apps/site/ui/src/copy.ts` holds every string of the page, the forms and the
-privacy page); there is no localisation. The request form says that requests may be written in German.
-Position and department labels are English; the filter also hits the German titles.
+The page, both forms and the privacy page exist in English and German (`apps/site/ui/src/copy.ts`: `en` is
+the source of the keys, `de` must carry every one). The choice is guessed from the browser on the first
+visit, kept in localStorage (`lang`), switched by the button in the bar and mirrored on `<html lang>`.
+Position and department labels stay English in both languages (the shared vocabulary; the filter also hits
+the German titles); the systems, years, languages and platforms labels are translated in the dictionary.
+Error messages from the Worker are English. The admin view is English.
